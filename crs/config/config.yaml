@@ -1,0 +1,36 @@
+dir_name: 0416_full_byte_track_debug_2
+place: WorldPorters_noon
+crop_area: null
+# crop_area:
+# - 130
+# - 250
+# - 480
+# - 800
+frame_range:
+- 1
+- 8990
+freq: 10
+grid_size: 5
+func_para:
+- 1
+- 50
+- 0.1
+vec_span: 10
+dan_ver: div
+distance_decay_method: gaussian
+# distance_decay_method: liner
+# distance_decay_method: None
+div_avg: false
+track_method: byte_track
+space_ma: false
+space_window_size: 75
+time_ma: false
+time_window_size: 3
+danger_thred_list:
+- 5
+- 10
+- 15
+dense_thred_list:
+- 75
+- 100
+- 125
