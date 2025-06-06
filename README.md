@@ -1,6 +1,6 @@
 # Automatic Crowd Congestion Analysis System
-![System Overview](figs/pipeline.pdf)
-![System Overview](figs/heatmap.pdf)
+![System Overview](figs/pipeline.png)
+![System Overview](figs/heatmap.png)
 ![System Overview](figs/overview.mp4)
 
 # Setup environment
@@ -34,7 +34,7 @@ bash bytetrack/scripts/run_byte_track.sh <PLACE>
 
 # Risk Estimation (Crowd Risk Score)
 We proposed a quantitative metric for evaluating crowd-related risks.
-![Process for computing Crowd Risk Score (CRS).](figs/pipeline.pdf)
+![Process for computing Crowd Risk Score (CRS).](figs/pipeline.png)
 ```
 bash crs/scripts/run_main.sh
 ```
