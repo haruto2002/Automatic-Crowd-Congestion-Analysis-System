@@ -25,7 +25,7 @@ bash scripts/run_inference.sh <OUT_DIR> <WEIGHT_PATH> <IMG_DIR>
 ```
 
 # Head Tracking (ByteTrack)
-ByteTrack is proposed in the paper::
+ByteTrack is proposed in the paper:
 [ByteTrack: Multi-Object Tracking by Associating Every Detection Box (ECCV 2022)](https://arxiv.org/abs/2110.06864)
 by Zhang *et al.*
 ```
