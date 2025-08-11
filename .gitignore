@@ -1,0 +1,15 @@
+log
+demo*
+debug*
+*.pth
+*.mov
+*.mp4
+*.MOV
+__pycache__/
+
+run_pipeline_demo.sh
+
+yokohama/Akarenga
+yokohama/Chosha
+yokohama/Kokusaibashi
+yokohama/WorldPorter

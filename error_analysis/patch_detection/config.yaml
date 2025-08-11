@@ -1,0 +1,72 @@
+default:
+  dir_name: outputs
+  resource: local
+  bar: true
+  r_seed: 317
+  num_workers: 2
+  eval_freq: 1
+  epochs: 1000
+  save: false
+  multi_node: false
+  master: localhost
+  port: 1234
+  DDP: true
+  rapid: true
+  amp: true
+  finetune: true
+  wandb: false
+network:
+  dnn_task: counting
+  backbone: vgg16_bn
+  set_cost_class: 1.0
+  set_cost_point: 0.05
+  point_loss_coef: 0.0002
+  class_loss_coef: 1.0
+  eos_coef: 0.5
+  row: 2
+  line: 2
+  matcher_cal: gpu
+  clip_max_norm: 0.1
+  all_save: false
+  fix_param: None
+  init_weight: cutout.pth
+dataset:
+  cache: true
+  name: ShanghaiB
+  crop_size: 128
+  crop_freq: 4
+  cut_out: false
+  color_jitter: false
+  brightness: 30
+  contrast: 0
+  saturation: 30
+  hue: 5
+optimizer:
+  hp:
+    lr: 0.1
+    lr_decay: 0.001
+    momentum: 0.95
+    weight_decay: 0.0001
+    lr_warmup_step: 10
+    lr_warmup_init: 1.0e-05
+  batch_size:
+    train: 2
+    test: 2
+  scheduler:
+    name: cosine
+    step: 3500
+    warmup: false
+wandb:
+  project_name: MIRU_demo
+  run_name: ''
+out_dir: error_analysis/patch_detection/
+img_dir: error_analysis/img
+execute_config_name: p2p
+override_cmd:
+- out_dir=error_analysis/patch_detection/
+- default.finetune=True
+- network.init_weight=cutout.pth
+- optimizer.batch_size.test=2
+- default.bar=True
+- default.num_workers=2
+- img_dir=error_analysis/img

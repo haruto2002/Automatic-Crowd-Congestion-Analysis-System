@@ -1,0 +1,19 @@
+results_base_dir_name: results
+dir_name: debug_crowd_danger
+track_dir: track_frame_data
+bev_dir: crs/bev/WorldPorters_8K_matrix.txt
+size_dir: crs/size/WorldPorters_8K_size.txt
+crop_area: null
+frame_range:
+- 1
+- 8990
+freq: 10
+func_para:
+- 1
+- 20.25
+- null
+grid_size: 3
+vec_span: 10
+dan_ver: Cd
+distance_decay_method: gaussian
+vec_decay_method: null

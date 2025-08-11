@@ -1,0 +1,11 @@
+mkdir -p ./yokohama_2025_06/Akarenga
+cp yokohama/Akarenga/vis/*.* ./yokohama_2025_06/Akarenga/
+
+mkdir -p ./yokohama_2025_06/Chosha
+cp yokohama/Chosha/vis/*.* ./yokohama_2025_06/Chosha/
+
+mkdir -p ./yokohama_2025_06/WorldPorter
+cp yokohama/WorldPorter/vis/*.* ./yokohama_2025_06/WorldPorter/
+
+mkdir -p ./yokohama_2025_06/Kokusaibashi
+cp yokohama/Kokusaibashi/vis/*.* ./yokohama_2025_06/Kokusaibashi/

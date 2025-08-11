@@ -1,36 +1,19 @@
-dir_name: 0416_full_byte_track_debug_2
-place: WorldPorters_noon
+output_dir: demo/crowd_risk_score/debug
+track_dir: demo/track
+bev_file: crs/bev/WorldPorters_8K_matrix.txt
+size_file: crs/size/WorldPorters_8K_size.txt
 crop_area: null
-# crop_area:
-# - 130
-# - 250
-# - 480
-# - 800
 frame_range:
 - 1
-- 8990
+- 151
+# - 8900
 freq: 10
-grid_size: 5
 func_para:
 - 1
-- 50
-- 0.1
+- 13.5
+- null
+grid_size: 5
 vec_span: 10
 dan_ver: div
 distance_decay_method: gaussian
-# distance_decay_method: liner
-# distance_decay_method: None
-div_avg: false
-track_method: byte_track
-space_ma: false
-space_window_size: 75
-time_ma: false
-time_window_size: 3
-danger_thred_list:
-- 5
-- 10
-- 15
-dense_thred_list:
-- 75
-- 100
-- 125
+vec_decay_method: null

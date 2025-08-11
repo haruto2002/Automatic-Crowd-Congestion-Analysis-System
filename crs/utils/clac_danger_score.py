@@ -39,7 +39,6 @@ def clac_div_origin(around_data, center_pos, func_para, distance_decay, vec_deca
     return div_danger_score
 
 def exp_decay(v, a=12.0):
-    print("Exp decay")
     if v > 0:
         return 0.3 * (1 - np.exp(-a * v))
     else:
@@ -106,7 +105,7 @@ def get_vec_var(around_data, func_para, distance_decay):
     return vec_var
 
 # 回転×密度
-def calc_div(around_data, center_pos, func_para, distance_decay_method=None, div_avg=False,max_x=100,vec_decay_method=None):
+def calc_div(around_data, center_pos, func_para, distance_decay_method=None, max_x=100,vec_decay_method=None):
     if distance_decay_method is None:
         density=len(around_data)
         distance_decay = None
@@ -115,13 +114,10 @@ def calc_div(around_data, center_pos, func_para, distance_decay_method=None, div
     elif distance_decay_method == "liner":
         density, distance_decay = get_liner_decay_density(center_pos, around_data[:,0],max_x=max_x)
     div = clac_div_origin(around_data, center_pos, func_para, distance_decay, vec_decay_method=vec_decay_method)
-    if div_avg:
-        return div, density #div*density/density
-    else:
-        return div*density,density
+    return div*density,density
     
 # 回転×密度
-def calc_curl(around_data, center_pos, func_para, distance_decay_method=None, div_avg=False,max_x=100,vec_decay_method=None):
+def calc_curl(around_data, center_pos, func_para, distance_decay_method=None, max_x=100,vec_decay_method=None):
     if distance_decay_method is None:
         density=len(around_data)
         distance_decay = None
@@ -130,10 +126,7 @@ def calc_curl(around_data, center_pos, func_para, distance_decay_method=None, di
     elif distance_decay_method == "liner":
         density, distance_decay = get_liner_decay_density(center_pos, around_data[:,0],max_x=max_x)
     curl = clac_curl_origin(around_data, center_pos, func_para, distance_decay, vec_decay_method=vec_decay_method)
-    if div_avg:
-        return curl, density #curl*density/density
-    else:
-        return curl*density,density
+    return curl*density,density
     
 def calc_crowd_pressure(around_data, center_pos, func_para, distance_decay_method="gaussian",max_x=100):
     if distance_decay_method is None:
@@ -219,7 +212,7 @@ def distance_liner_decay(d, max_x=100):
 
 
 
-def get_map_data(size, vec_data, grid_size, func_para, dan_ver=None, distance_decay_method=None,div_avg=False,vec_decay_method=None):
+def get_map_data(size, vec_data, grid_size, func_para, dan_ver=None, distance_decay_method=None,vec_decay_method=None):
     # vec_data.shape >> (num_people, pos(2), vec(2))
     refine = False
     if refine:
@@ -260,9 +253,9 @@ def get_map_data(size, vec_data, grid_size, func_para, dan_ver=None, distance_de
                 continue
 
             if dan_ver == "div":
-                div, density = calc_div(around_data, center_pos, func_para,distance_decay_method=distance_decay_method, div_avg=div_avg,max_x=max_x,vec_decay_method=vec_decay_method)
+                div, density = calc_div(around_data, center_pos, func_para,distance_decay_method=distance_decay_method, max_x=max_x,vec_decay_method=vec_decay_method)
             elif dan_ver == "curl":
-                div, density = calc_curl(around_data, center_pos, func_para,distance_decay_method=distance_decay_method, div_avg=div_avg,max_x=max_x,vec_decay_method=vec_decay_method)
+                div, density = calc_curl(around_data, center_pos, func_para,distance_decay_method=distance_decay_method, max_x=max_x,vec_decay_method=vec_decay_method)
             elif dan_ver == "crowd_pressure":
                 div, density = calc_crowd_pressure(around_data, center_pos, func_para,distance_decay_method=distance_decay_method, max_x=max_x)
             else:
@@ -438,7 +431,7 @@ def get_CL_map(curl_map, grid_vec_data, roi_size=3):
 
 def calc_Cd_map(size, vec_data_stack_list, grid_size, roi_size=3, distance_decay_method=None, max_x=100):
     grid_vec_data, decay_density_map = get_grid_vec_data(size, vec_data_stack_list, grid_size=grid_size, distance_decay_method=distance_decay_method, R=max_x)
-    display_vec_data(grid_vec_data,grid_size)
+    # display_vec_data(grid_vec_data,grid_size)
     curl_map = get_curl_map(grid_vec_data, grid_size)
     CL_map = get_CL_map(curl_map, grid_vec_data, roi_size)
     assert decay_density_map.shape == CL_map.shape
