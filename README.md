@@ -53,26 +53,17 @@ qsub -v EXP_NAME={exp_name},VIDEO_PATH={video_path} run_pipeline.sh
 ## Output Directory Structure
 ```
 SAVE_DIR/
-├── img/                      # Frame images extracted from the video
-│   ├── 0001.png
-│   ├── 0002.png
-│   └── ...
-├── patch_detection/          # Detection results for each patch (P2PNet output)
-│   ├── 0001.txt
-│   ├── 0002.txt
-│   └── ...
-├── full_detection/           # Merged detection results for the whole image
-│   ├── 0001.txt
-│   ├── 0002.txt
-│   └── ...
-├── detection_plot/           # Visualization of detections
-├── track/                    # Tracking results (ByteTrack output)
-│   ├── 0001.txt
-│   ├── 0002.txt
-│   └── ...
-├── crowd_risk_score/         # Output of crowd risk score
-├── risk_heatmap/             # Visualization of risk estimation
-└── time_log.txt             # Log of processing time for each step
+├── .hydra/ 
+├── results/
+│   ├── img/                      # Frame images extracted from the video
+│   ├── detection/           # Merged detection results for the whole 
+│   ├── detection_vis/           # Visualization of detections
+│   ├── track/
+│   ├── track_vis/                    # Tracking results (ByteTrack output)
+│   ├── crowd_risk_score/         # Output of crowd risk score
+│   ├── risk_heatmap/             # Visualization of risk estimation
+│   └── time_log.txt             # Log of processing time for each step
+└── run_job_hydra.log  
 ```
 
 # Details
