@@ -28,7 +28,7 @@ class SetCriterion_Crowd(nn.Module):
         """Classification loss (NLL)
         targets dicts must contain the key "labels" containing a tensor of dim [nb_target_boxes]
         """
-        # outputs:辞書{'pred_logits': tensor([人である可能性,そうでない可能性]...座標ごと)[32, 1024, 2],'pred_points':...(使わない)}
+        # outputs: dict{'pred_logits': tensor([probability of person, probability of not person]...per coordinate)[32, 1024, 2],'pred_points':...(not used)}
         # targets:各画像に対す辞書(['point', 'image_id', 'labels'])
         # indices:各画像の(preのidxの順列,gtのidxの順列) (32,2)
 
@@ -51,7 +51,7 @@ class SetCriterion_Crowd(nn.Module):
         # print(p2pnet_logits.transpose(1, 2).device) >> cuda
         # print(target_classes.device) >> cuda
         # print(self.empty_weight.device) >> cpu
-        # loss_fnをGPUに載せないとここでエラーに
+        # Error occurs here if loss_fn is not loaded on GPU
         loss_ce = F.cross_entropy(
             p2pnet_logits.transpose(1, 2), target_classes, self.empty_weight
         )
@@ -61,7 +61,7 @@ class SetCriterion_Crowd(nn.Module):
 
     def loss_points(self, outputs, targets, indices, num_points):
 
-        # outputs:辞書{'pred_logits':...(使わない),'pred_points':バッチごとの全参照点1024個の座標[32, 1024, 2]}
+        # outputs: dict{'pred_logits':...(not used),'pred_points': coordinates of all 1024 reference points per batch[32, 1024, 2]}
         # targets:各画像に対す辞書(['point', 'image_id', 'labels'])
         # indices:各画像の(preのidxの順列,gtのidxの順列) (32,2)
 
@@ -98,7 +98,7 @@ class SetCriterion_Crowd(nn.Module):
 
     def get_loss(self, loss, outputs, targets, indices, num_points, **kwargs):
         loss_map = {
-            "labels": self.loss_labels,  # これは変数ではなく関数
+            "labels": self.loss_labels,  # This is a function, not a variable
             "points": self.loss_points,
         }
         assert loss in loss_map, f"do you really want to compute {loss} loss?"

@@ -5,9 +5,8 @@ source ~/miniconda3/bin/activate hnakayama
 WORKDIR=~/research/Automatic-Crowd-Congestion-Analysis-System
 cd $WORKDIR
 
-DETECTION_DIR=$1
-TRACK_SAVE_DIR=$2
-LOG_LEVEL=$3
+DETECTION_DIR="output_pre/DSC_3809/detection/frame_detection"
+TRACK_SAVE_DIR="demo_track"
 
 python bytetrack/run_point_tracker.py \
         --save_dir ${TRACK_SAVE_DIR} \
@@ -18,4 +17,5 @@ python bytetrack/run_point_tracker.py \
         --track_buffer 30 \
         --match_thresh 10.0 \
         --distance_metric euclidean \
-        --log_level ${LOG_LEVEL}
+        --max_frame 30 \
+        --log_level ERROR

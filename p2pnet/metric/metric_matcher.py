@@ -79,8 +79,8 @@ class HungarianMatcher_Crowd_metric_ver(nn.Module):
 
             # distance_threshold = 10
 
-            # # 一定の距離以上の要素を非常に大きな値に置き換え
-            # large_value = float("inf")  # 無限大または非常に大きな値
+            # # Replace elements with distance above threshold with very large value
+            # large_value = float("inf")  # Infinity or very large value
             # cost_point[cost_point > distance_threshold] = large_value
 
             # Final cost matrix
@@ -89,7 +89,7 @@ class HungarianMatcher_Crowd_metric_ver(nn.Module):
             C = C.view(bs, num_queries, -1).cpu()
 
             sizes = [len(v["point"]) for v in targets]
-            # バッチでまとまったコスト行列から各画像ごとのコスト行列を対角線上に取り出して計算
+            # Extract cost matrix for each image from diagonal of batched cost matrix and calculate
             indices = [
                 linear_sum_assignment(c[i]) for i, c in enumerate(C.split(sizes, -1))
             ]

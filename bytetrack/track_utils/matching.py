@@ -215,7 +215,7 @@ def euclidean_distance(atracks, btracks):
 
 def maha_distance(atracks, btracks, kalman_filter_instance, metric="maha"):
     """
-    カルマンフィルターのマハラノビス距離またはユークリッド距離に基づくコスト行列を計算します
+    Calculate cost matrix based on Mahalanobis distance or Euclidean distance of Kalman filter
     :type atracks: list[STrack]
     :type btracks: list[STrack]
     :type kalman_filter_instance: KalmanFilter

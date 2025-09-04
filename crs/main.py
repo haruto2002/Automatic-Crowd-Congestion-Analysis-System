@@ -1,10 +1,10 @@
 import numpy as np
 import os
-import yaml
 import glob
 from tqdm import tqdm
 from multiprocessing import Pool
 import argparse
+import logging
 from utils.get_track_data import get_all_track, get_all_vec
 from utils.clac_danger_score import (
     get_map_data,
@@ -174,10 +174,6 @@ def main(
     distance_decay_method,
     vec_decay_method,
 ):
-    if "debug" in output_dir:
-        exist_ok = True
-    else:
-        exist_ok = False
 
     start_frame, end_frame = frame_range
     if start_frame is None:
@@ -185,9 +181,8 @@ def main(
     if end_frame is None:
         end_frame = len(glob.glob(os.path.join(track_dir, "*.txt")))
 
-    print("SAVE_DIR >> ", output_dir)
     res_save_dir = f"{output_dir}/each_result"
-    os.makedirs(res_save_dir, exist_ok=exist_ok)
+    os.makedirs(res_save_dir, exist_ok=True)
 
     pool_list = []
     for frame in range(start_frame, end_frame, freq):
@@ -208,7 +203,6 @@ def main(
         pool_list.append(input)
 
     # run parallel
-    print("calculating")
     pool_size = min(os.cpu_count(), len(pool_list))
     with Pool(pool_size) as p:
         list(tqdm(p.imap_unordered(run_parallel, pool_list), total=len(pool_list)))
@@ -264,60 +258,77 @@ def get_parser():
         "--track_dir",
         type=str,
         default="demo/track",
-        help="トラッキングデータのディレクトリ",
+        help="Tracking data directory",
     )
     parser.add_argument(
         "--bev_file",
         type=str,
         default="crs/bev/WorldPorters_8K_matrix.txt",
-        help="BEVデータのディレクトリ",
+        help="BEV data directory",
     )
     parser.add_argument(
         "--size_file",
         type=str,
         default="crs/size/WorldPorters_8K_size.txt",
-        help="サイズデータのディレクトリ",
+        help="Size data directory",
     )
     parser.add_argument(
         "--output_dir",
         type=str,
         default="demo/crowd_risk_score/debug",
-        help="出力ディレクトリ名",
+        help="Output directory name",
     )
-    parser.add_argument("--grid_size", type=int, default=5, help="グリッドサイズ")
-    parser.add_argument("--vec_span", type=int, default=10, help="ベクトル計算のスパン")
-    parser.add_argument("--freq", type=int, default=10, help="危険度計算のフレーム間隔")
-    parser.add_argument("--frame_start", type=int, default=1, help="開始フレーム")
-    parser.add_argument("--frame_end", type=int, default=8990, help="終了フレーム")
+    parser.add_argument("--grid_size", type=int, default=5, help="Grid size")
     parser.add_argument(
-        "--dan_ver", type=str, default="div", help="危険度計算バージョン"
+        "--vec_span", type=int, default=10, help="Vector calculation span"
+    )
+    parser.add_argument(
+        "--freq", type=int, default=10, help="Risk calculation frame interval"
+    )
+    parser.add_argument("--frame_start", type=int, default=1, help="Start frame")
+    parser.add_argument("--frame_end", type=int, default=8990, help="End frame")
+    parser.add_argument(
+        "--dan_ver", type=str, default="div", help="Risk calculation version"
     )
     parser.add_argument(
         "--distance_decay_method",
         type=str,
         default=None,
         choices=[None, "gaussian", "liner"],
-        help="距離減衰方法",
+        help="Distance decay method",
     )
     parser.add_argument(
         "--vec_decay_method",
         type=str,
         default=None,
         choices=[None, "exp_func", "clip"],
-        help="ベクトル減衰方法",
+        help="Vector decay method",
     )
 
-    # func_paraの設定
+    # func_para setting
     parser.add_argument(
-        "--decay", type=float, default=1.0, help="減衰パラメータ:使用しない"
+        "--decay", type=float, default=1.0, help="Decay parameter: not used"
     )
-    parser.add_argument("--max_x", type=float, default=50.0, help="最大距離")
+    parser.add_argument("--max_x", type=float, default=50.0, help="Maximum distance")
     parser.add_argument(
-        "--clip_value", type=float, default=0.1, help="速度のクリップ値"
+        "--clip_value", type=float, default=0.1, help="Speed clip value"
+    )
+
+    parser.add_argument(
+        "--log-level",
+        type=str,
+        default="INFO",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+        help="Log level",
     )
 
     return parser
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
+
+    logger.info("=== Crowd risk score analysis started ===")
+
     run_with_yaml()

@@ -34,7 +34,7 @@ def main():
     print("Visualizing regions on BEV image...")
     visualize_regions_on_bev_image(bev_img, all_regions, save_dir)
 
-    # データの抽出
+    # Data extraction
     print("Extracting data from polygon regions...")
     results, save_name = extract_data_from_polygon_regions(
         source_dir, all_regions, smoothing

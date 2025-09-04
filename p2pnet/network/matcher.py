@@ -85,7 +85,7 @@ class HungarianMatcher_Crowd(nn.Module):
             C = C.view(bs, num_queries, -1).cpu()
 
             sizes = [len(v["point"]) for v in targets]
-            # バッチでまとまったコスト行列から各画像ごとのコスト行列を対角線上に取り出して計算
+            # Extract cost matrix for each image from diagonal of batched cost matrix and calculate
             indices = [
                 linear_sum_assignment(c[i]) for i, c in enumerate(C.split(sizes, -1))
             ]

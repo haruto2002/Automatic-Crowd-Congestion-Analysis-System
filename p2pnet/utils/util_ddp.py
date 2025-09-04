@@ -72,10 +72,10 @@ def init_ddp(local_rank, dist_settings, cfg):
 
     dist.init_process_group("nccl", rank=global_rank, world_size=world_size)
 
-    print(
-        "DDP setup: global rank=%d, local_rank=%d, world_size=%d, master=%s, seed=%d"
-        % (global_rank, local_rank, world_size, master, cfg.default.r_seed)
-    )
+    # print(
+    #     "DDP setup: global rank=%d, local_rank=%d, world_size=%d, master=%s, seed=%d"
+    #     % (global_rank, local_rank, world_size, master, cfg.default.r_seed)
+    # )
     sys.stdout.flush()
 
     return global_rank, world_size

@@ -29,7 +29,7 @@ def parallel_cutter(pool_list):
     creation_time, start_time, duration = get_time_info(path2video)
     start_sec = (
         start_time - creation_time
-    ).seconds  # 15:40:45>>15:41:00になるようにするための秒数
+    ).seconds  # Number of seconds to make 15:40:45>>15:41:00
     for sec in range(start_sec, int(duration), freq):
         timestamp = creation_time + datetime.timedelta(seconds=sec)
         timestamp_str = timestamp.strftime("%Y-%m-%d_%H:%M:%S")
@@ -57,7 +57,11 @@ def get_time_info(cap_path):
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--save_dir", type=str, default="yokohama")
-    parser.add_argument("--video_dir", type=str, default="/homes/SHARE/Hanabi/20250602_Yokohama/8K/WorldPorter")
+    parser.add_argument(
+        "--video_dir",
+        type=str,
+        default="/homes/SHARE/Hanabi/20250602_Yokohama/8K/WorldPorter",
+    )
     parser.add_argument("--freq", type=int, default=60)  # second
     return parser.parse_args()
 

@@ -7,8 +7,8 @@ from tqdm import tqdm
 
 
 def save_colorbar(save_dir, min_val, max_val, height=400, width=50):
-    """カラーバーを生成して保存する関数"""
-    # カラーバーの作成
+    """Function to generate and save colorbar"""
+    # Create colorbar
     gradient = np.linspace(min_val, max_val, height)[:, np.newaxis]
     gradient = np.tile(gradient, (1, width))
 
@@ -16,7 +16,7 @@ def save_colorbar(save_dir, min_val, max_val, height=400, width=50):
     gradient_norm = ((gradient - min_val) / (max_val - min_val) * 255).astype(np.uint8)
     gradient_norm = np.tile(gradient_norm[:, :, np.newaxis], (1, 1, 3))
 
-    # カラーマップを適用
+    # Apply colormap
     colorbar = cv2.applyColorMap(gradient_norm, cv2.COLORMAP_JET)
 
     # 保存
@@ -24,7 +24,7 @@ def save_colorbar(save_dir, min_val, max_val, height=400, width=50):
     os.makedirs(colorbar_dir, exist_ok=True)
     cv2.imwrite(os.path.join(colorbar_dir, "colorbar.png"), colorbar)
 
-    # テキスト付きのカラーバー（matplotlib使用）
+    # Colorbar with text (using matplotlib)
     plt.figure(figsize=(2, 8))
     plt.imshow(gradient, cmap="jet")
     plt.colorbar()
@@ -58,7 +58,7 @@ def display_heatmap_parallel(
     if min_score is None:
         min_score = map_global_min
 
-    # カラーバーの保存
+    # Save colorbar
     if colorbar_img:
         save_colorbar(save_dir, map_global_min, map_global_max)
 
@@ -159,7 +159,7 @@ def display_single(inputs):
         arrow_len = 5
         tipLength = 0.3
         arrow_scale = 50
-        # ヒートマップが最前面
+        # Heatmap is in front
         for x, y, vx, vy in vec_data:
             # ベクトルを圧縮・スケール
             vec = np.array([vx, vy], dtype=float)

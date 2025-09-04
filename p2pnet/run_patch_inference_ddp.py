@@ -53,6 +53,8 @@ def main(local_rank, cfg, input_settings=None, dist_settings=None):
     test_loader = create_patch_dataloader(
         cfg,
         img_dir,
+        global_rank,
+        world_size,
         img_size=img_size,
         separate_size=separate_size,
         padded_size=padded_size,
@@ -148,11 +150,11 @@ def save_detection_data(data_save_dir, points, scores, save_name):
 def input_info(cfg):
     img_dir = cfg.img_dir
     img_size = (4320, 7680)
-    separate_size = (720, 1280)
+    # separate_size = (720, 1280)
     padded_size = (4320, 7680)
     padding_data = (padded_size[0] - img_size[0], padded_size[1] - img_size[1])
 
-    # リサイズが必要か確認
+    # Check if resize is needed
     height, width = separate_size
     new_height = height // 128 * 128
     new_width = width // 128 * 128

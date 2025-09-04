@@ -64,12 +64,8 @@ def main(save_dir, path2gt, path2pred, eval_column):
     with open(path2pred, "r") as f:
         data = json.load(f)
 
-    danger_score_data_list_safe = [
-        data[i][eval_column] for i in same_safe_indices
-    ]
-    danger_score_data_list_danger = [
-        data[i][eval_column] for i in same_danger_indices
-    ]
+    danger_score_data_list_safe = [data[i][eval_column] for i in same_safe_indices]
+    danger_score_data_list_danger = [data[i][eval_column] for i in same_danger_indices]
     labels = np.concatenate(
         [
             np.zeros(len(danger_score_data_list_safe)),
@@ -82,13 +78,40 @@ def main(save_dir, path2gt, path2pred, eval_column):
         eval_column,
         save_dir,
     )
-    display_hist([danger_score_data_list_safe, danger_score_data_list_danger],  ["safe", "danger"],eval_column, save_dir)
+    display_hist(
+        [danger_score_data_list_safe, danger_score_data_list_danger],
+        ["safe", "danger"],
+        eval_column,
+        save_dir,
+    )
 
-    save_stats(danger_indices_A, safe_indices_A, danger_indices_B, safe_indices_B, same_danger_indices, same_safe_indices, danger_score_auc, danger_score_ap, save_dir, eval_column)
+    save_stats(
+        danger_indices_A,
+        safe_indices_A,
+        danger_indices_B,
+        safe_indices_B,
+        same_danger_indices,
+        same_safe_indices,
+        danger_score_auc,
+        danger_score_ap,
+        save_dir,
+        eval_column,
+    )
 
 
-def save_stats(danger_indices_A, safe_indices_A, danger_indices_B, safe_indices_B, same_danger_indices, same_safe_indices, danger_score_auc, danger_score_ap, save_dir, eval_column):
-    danger_num_A = len(danger_indices_A)    
+def save_stats(
+    danger_indices_A,
+    safe_indices_A,
+    danger_indices_B,
+    safe_indices_B,
+    same_danger_indices,
+    same_safe_indices,
+    danger_score_auc,
+    danger_score_ap,
+    save_dir,
+    eval_column,
+):
+    danger_num_A = len(danger_indices_A)
     safe_num_A = len(safe_indices_A)
     danger_num_B = len(danger_indices_B)
     safe_num_B = len(safe_indices_B)
@@ -114,7 +137,7 @@ def print_aligned_stats(stats_dict):
     max_key_length = max(len(str(k)) for k in stats_dict.keys())
     max_value_length = max(len(f"{v}") for v in stats_dict.values())
 
-    # フォーマット文字列を作成
+    # Create format string
     format_str = f"{{:<{max(max_key_length, 20)}}}: {{:>{max_value_length}}}"
 
     for key, value in stats_dict.items():
@@ -154,9 +177,7 @@ def display_hist(score_data_list, label_list, eval_column, save_dir, save_data=F
     plt.close()
 
 
-def calculate_metrics(
-    data_list, labels, eval_column, save_dir
-):
+def calculate_metrics(data_list, labels, eval_column, save_dir):
 
     # ── ROC‑AUC ──
     fpr, tpr, roc_th = roc_curve(labels, data_list)

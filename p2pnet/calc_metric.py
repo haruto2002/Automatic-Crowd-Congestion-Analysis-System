@@ -313,7 +313,7 @@ def calc_metric(
         path2img = glob.glob(data_dir + "/*.jpg")[0]
         path2gt = glob.glob(data_dir + "/*.txt")[0]
         dir_name = data_dir.split("/")[-1]
-        img_id = int(dir_name[5:])  # scene0001から数字を取り出す
+        img_id = int(dir_name[5:])  # Extract number from scene0001
         each_save_dir = save_dir + "/each_results/" + dir_name
 
         img, gt_points = load_from_path(path2img, path2gt)

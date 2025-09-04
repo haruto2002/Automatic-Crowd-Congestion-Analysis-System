@@ -1,11 +1,8 @@
 #!/bin/bash
-#SBATCH -p cpu1
-#SBATCH -o /homes/hnakayama/congestion_analysis/log/%x-%j.out
-#SBATCH -e /homes/hnakayama/congestion_analysis/log/%x-%j.out
 
-source ~/miniconda3/bin/activate hnakayama2
+source ~/miniconda3/bin/activate hnakayama
 
-WORKDIR="/homes/hnakayama/congestion_analysis"
+WORKDIR=~/research/Automatic-Crowd-Congestion-Analysis-System
 cd $WORKDIR
 
 # IMG_DIR=demo/img
@@ -19,12 +16,12 @@ cd $WORKDIR
 IMG_DIR=$1
 DET_DIR=$2
 SAVE_DIR=$3
+FREQ=$4
+LOG_LEVEL=$5
 
-echo "Displaying detection data..."
 python visualize/detection/plot_detection.py \
         --detection_dir ${DET_DIR} \
         --img_dir ${IMG_DIR} \
-        --save_dir ${SAVE_DIR}
-
-echo "Done"
-echo "Time: $SECONDS seconds"
+        --save_dir ${SAVE_DIR} \
+        --freq ${FREQ} \
+        --log_level ${LOG_LEVEL}

@@ -5,10 +5,15 @@ import argparse
 import numpy as np
 import os
 from multiprocessing import Pool
+import logging
 
 
-def plot_det_parallel(detection_dir, img_dir, save_dir, threshold=0.5):
+def plot_det_parallel(
+    detection_dir, img_dir, save_dir, threshold=0.5, freq=1, disable_tqdm=False
+):
     path2detection_list = sorted(glob.glob(f"{detection_dir}/*.txt"))
+    if freq > 1:
+        path2detection_list = path2detection_list[::freq]
     pool_list = []
     for path2detection in path2detection_list:
         frame_name = path2detection.split("/")[-1].split(".")[0]
@@ -16,7 +21,15 @@ def plot_det_parallel(detection_dir, img_dir, save_dir, threshold=0.5):
 
     pool_size = os.cpu_count()
     with Pool(pool_size) as p:
-        list(tqdm(p.imap_unordered(plot_det, pool_list), total=len(pool_list)))
+        list(
+            tqdm(
+                p.imap_unordered(plot_det, pool_list),
+                total=len(pool_list),
+                desc="Plotting Detection",
+                leave=False,
+                disable=disable_tqdm,
+            )
+        )
 
 
 def plot_det(pool_list):
@@ -37,6 +50,8 @@ def get_args():
     parser.add_argument("--img_dir", type=str, default="demo/img")
     parser.add_argument("--save_dir", type=str, default="demo/detection_plot")
     parser.add_argument("--threshold", type=float, default=0.5)
+    parser.add_argument("--freq", type=int, default=1)
+    parser.add_argument("--log_level", type=str, default="INFO")
     return parser.parse_args()
 
 
@@ -46,24 +61,16 @@ def main():
     img_dir = args.img_dir
     save_dir = args.save_dir
     threshold = args.threshold
+    freq = args.freq
+    log_level = args.log_level
+
+    logger = logging.getLogger(__name__)
+    logger.setLevel(getattr(logging, log_level.upper()))
+    disable_tqdm = logger.level >= logging.ERROR
+
     os.makedirs(save_dir, exist_ok=True)
-    plot_det_parallel(detection_dir, img_dir, save_dir, threshold)
-
-
-def plot_custom_det(frame):
-    # source_dir = "demo_5min_8K"
-    source_dir = "demo"
-
-    frame_name = f"{frame:04d}"
-    path2detection = f"{source_dir}/full_detection/{frame_name}.txt"
-    img_dir = f"{source_dir}/img"
-    save_dir = f"{source_dir}/detection_plot_custom"
-    threshold = 0.1
-    inputs = [path2detection, img_dir, save_dir, frame_name, threshold]
-    os.makedirs(save_dir, exist_ok=True)
-    plot_det(inputs)
+    plot_det_parallel(detection_dir, img_dir, save_dir, threshold, freq, disable_tqdm)
 
 
 if __name__ == "__main__":
-    # main()
-    plot_custom_det(1)
+    main()

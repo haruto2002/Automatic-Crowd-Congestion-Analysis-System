@@ -15,7 +15,7 @@ def extract_data_from_polygon_regions(source_dir, all_regions, smoothing):
         cfg = yaml.safe_load(f)
     grid_size = cfg["grid_size"]
 
-    # データディレクトリの設定
+    # Data directory configuration
     if smoothing:
         danger_source_dir = os.path.join(
             source_dir, "each_result", "danger_score_smoothed"
@@ -31,7 +31,7 @@ def extract_data_from_polygon_regions(source_dir, all_regions, smoothing):
 
     assert len(danger_score_path_list) == len(vec_data_path_list)
 
-    # 各ポリゴン領域ごとにデータを処理
+    # Process data for each polygon region
     pool_list = []
     region_dict = {}
 
@@ -46,7 +46,7 @@ def extract_data_from_polygon_regions(source_dir, all_regions, smoothing):
                 [region, grid_size, danger_score_path, vec_data_path, region_name]
             )
 
-    # 並列処理でデータを取得
+    # Get data with parallel processing
     pool_size = os.cpu_count()
     with Pool(processes=pool_size) as pool:
         results = list(
@@ -67,7 +67,7 @@ def setting_data_for_graph(results):
             results_grouped_by_region[region_name] = []
         results_grouped_by_region[region_name].append(result)
 
-    # 各領域ごとにデータをソート
+    # Sort data for each region
     results_for_graph = {}
     for region_name, result_list in results_grouped_by_region.items():
         sorted_result_list = sorted(result_list, key=lambda x: x[1])
@@ -95,7 +95,7 @@ def get_single_data_polygon(region, grid_size, danger_score_path, vec_data_path)
         np.loadtxt(danger_score_path), region, grid_size
     )
 
-    # ベクトルデータの取得
+    # Get vector data
     velocity_norm, num_people = get_polygon_vec_data(np.loadtxt(vec_data_path), region)
 
     # フレーム番号の取得
@@ -112,9 +112,9 @@ def get_polygon_map_data(map_data, region, grid_size):
     1. ポリゴンの境界ボックスを取得
     2. grid_sizeで座標を正規化（ピクセル座標に変換）
     3. 画像座標系に変換（Y軸反転）
-    4. 境界内に制限して有効な範囲を確保
+    4. Limit to boundaries to ensure valid range
     5. ポリゴン内の各ピクセルをチェック
-    6. ポリゴン内のデータの平均を計算
+    6. Calculate average of data within polygon
     """
     # 1. ポリゴンの境界ボックスを取得
     minx, miny, maxx, maxy = region.bounds
@@ -132,7 +132,7 @@ def get_polygon_map_data(map_data, region, grid_size):
     miny_img = int(img_height - maxy)  # Y軸反転
     maxy_img = int(img_height - miny)  # Y軸反転
 
-    # 4. 境界内に制限して有効な範囲を確保
+    # 4. Limit to boundaries to ensure valid range
     minx_img = max(0, minx_img)
     maxx_img = min(map_data.shape[1], maxx_img)
     miny_img = max(0, miny_img)
@@ -143,7 +143,7 @@ def get_polygon_map_data(map_data, region, grid_size):
     if minx_img < maxx_img and miny_img < maxy_img:
         for y in range(miny_img, maxy_img):
             for x in range(minx_img, maxx_img):
-                # 画像座標系からポリゴン座標系に変換
+                # Convert from image coordinate system to polygon coordinate system
                 poly_x = x * grid_size
                 poly_y = (img_height - y) * grid_size
 
@@ -151,7 +151,7 @@ def get_polygon_map_data(map_data, region, grid_size):
                 if region.contains(Point(poly_x, poly_y)):
                     points_in_polygon.append(map_data[y, x])
 
-    # 6. ポリゴン内のデータの平均を計算
+    # 6. Calculate average of data within polygon
     if len(points_in_polygon) > 0:
         average_danger_score = np.mean(np.clip(points_in_polygon, 0, None))
     else:
@@ -162,9 +162,9 @@ def get_polygon_map_data(map_data, region, grid_size):
 
 def get_polygon_vec_data(vec_data, region):
     """
-    ポリゴン領域内のベクトルデータを処理
+    Process vector data within polygon region
     """
-    # ポリゴン内の点をフィルタリング
+    # Filter points within polygon
     points_in_region = []
 
     for point in vec_data:

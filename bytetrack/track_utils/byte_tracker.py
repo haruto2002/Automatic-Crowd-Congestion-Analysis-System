@@ -131,9 +131,9 @@ class STrack(BaseTrack):
         if self.mean is None:
             return self._tlwh.copy()
 
-        # カルマンフィルターの状態が(x, y, vx, vy)の場合
-        # 中心座標(x, y)から左上座標に変換
-        # 幅と高さは元のバウンディングボックスから保持
+        # When Kalman filter state is (x, y, vx, vy)
+        # Convert from center coordinates (x, y) to top-left coordinates
+        # Keep width and height from original bounding box
         ret = self._tlwh.copy()
         ret[:2] = self.mean[:2] - self._tlwh[2:] / 2
         return ret
@@ -205,13 +205,13 @@ class BYTETracker(object):
         lost_stracks = []
         removed_stracks = []
 
-        if output_results.shape[1] == 3:  # ポイントデータ [x, y, score]
+        if output_results.shape[1] == 3:  # Point data [x, y, score]
             scores = output_results[:, 2]
             points = output_results[:, :2]  # x, y
-        elif output_results.shape[1] == 5:  # 従来のバウンディングボックスデータ
+        elif output_results.shape[1] == 5:  # Traditional bounding box data
             scores = output_results[:, 4]
             bboxes = output_results[:, :4]
-            # バウンディングボックスから中心点を計算
+            # Calculate center point from bounding box
             points = np.column_stack(
                 [
                     (bboxes[:, 0] + bboxes[:, 2]) / 2,  # center x
@@ -222,7 +222,7 @@ class BYTETracker(object):
             output_results = output_results.cpu().numpy()
             scores = output_results[:, 4] * output_results[:, 5]
             bboxes = output_results[:, :4]  # x1y1x2y2
-            # バウンディングボックスから中心点を計算
+            # Calculate center point from bounding box
             points = np.column_stack(
                 [
                     (bboxes[:, 0] + bboxes[:, 2]) / 2,  # center x
@@ -269,7 +269,7 @@ class BYTETracker(object):
 
         # 距離ベースのマッチングを使用
         if self.point_matching:
-            # カルマンフィルターの選択した距離メトリックを使用する
+            # Use selected distance metric of Kalman filter
             dists = maha_distance(
                 strack_pool, detections, self.kalman_filter, metric=self.distance_metric
             )

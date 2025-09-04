@@ -1,11 +1,8 @@
 #!/bin/bash
-#SBATCH -p cpu1
-#SBATCH -o /homes/hnakayama/congestion_analysis/log/%x-%j.out
-#SBATCH -e /homes/hnakayama/congestion_analysis/log/%x-%j.out
 
-source ~/miniconda3/bin/activate hnakayama2
+source ~/miniconda3/bin/activate hnakayama
 
-WORKDIR="/homes/hnakayama/congestion_analysis"
+WORKDIR=~/research/Automatic-Crowd-Congestion-Analysis-System
 cd $WORKDIR
 
 # TRACK_DIR="demo/track"
@@ -26,8 +23,8 @@ python crs/main.py config \
     frame_range="[null, null]" \
 
 
-python crs/utils/smoothing.py \
-    --source_dir ${RISK_OUTPUT_DIR}/each_result/danger_score \
-    --save_dir ${RISK_OUTPUT_DIR}/each_result/danger_score_smoothed \
-    --space_window_size 3 \
-    --time_window_size 10
+# python crs/utils/smoothing.py \
+#     --source_dir ${RISK_OUTPUT_DIR}/each_result/danger_score \
+#     --save_dir ${RISK_OUTPUT_DIR}/each_result/danger_score_smoothed \
+#     --space_window_size 3 \
+#     --time_window_size 10

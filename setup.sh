@@ -24,3 +24,7 @@ pip install mean_average_precision
 pip install wandb
 
 conda install conda-forge::pytorch-model-summary
+
+conda install conda-forge::lap
+pip install cython-bbox
+pip install hydra-core

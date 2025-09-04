@@ -5,13 +5,14 @@ import numpy as np
 import os
 import argparse
 
+
 def calc_precision(pred_list, gt_list, consider_index_list=None):
     precision = 0
 
     if consider_index_list is not None:
-        total_num=len(consider_index_list)
+        total_num = len(consider_index_list)
     else:
-        total_num=len(pred_list)
+        total_num = len(pred_list)
 
     for i, pred in enumerate(pred_list):
         if consider_index_list is not None and i not in consider_index_list:
@@ -20,6 +21,7 @@ def calc_precision(pred_list, gt_list, consider_index_list=None):
             precision += 1
     precision /= total_num
     return precision
+
 
 def convert_to_pred_list(path2pred, eval_column):
     with open(path2pred, "r") as f:
@@ -42,6 +44,7 @@ def convert_to_gt_list(path2gt):
     different_index_list = list(set(range(len(gt_list_A))) - set(same_index_list))
     return gt_list_A, gt_list_B, same_index_list, different_index_list
 
+
 def main(
     save_dir,
     path2gt,
@@ -49,8 +52,15 @@ def main(
     eval_column,
 ):
     pred_list = convert_to_pred_list(path2pred, eval_column)
-    gt_list_A, gt_list_B, same_index_list, different_index_list = convert_to_gt_list(path2gt)
-    assert len(pred_list) == len(gt_list_A) == len(gt_list_B) == len(same_index_list) + len(different_index_list)
+    gt_list_A, gt_list_B, same_index_list, different_index_list = convert_to_gt_list(
+        path2gt
+    )
+    assert (
+        len(pred_list)
+        == len(gt_list_A)
+        == len(gt_list_B)
+        == len(same_index_list) + len(different_index_list)
+    )
 
     precision_A = calc_precision(pred_list, gt_list_A, None)
     precision_B = calc_precision(pred_list, gt_list_B, None)
@@ -70,9 +80,9 @@ def main(
         "precision_diff_B": precision_diff_B,
     }
 
-    num_all=len(pred_list)
-    num_same=len(same_index_list)
-    num_diff=len(different_index_list)
+    num_all = len(pred_list)
+    num_same = len(same_index_list)
+    num_diff = len(different_index_list)
 
     print("----------------------------------------------")
     print("num_of_data", num_all)
@@ -85,38 +95,62 @@ def main(
     print_aligned_stats(stats_dict_3)
     print("----------------------------------------------")
 
-    save_result(num_all,num_same,num_diff,precision_A, precision_B, precision_same, precision_diff_A, precision_diff_B, save_dir, eval_column)
+    save_result(
+        num_all,
+        num_same,
+        num_diff,
+        precision_A,
+        precision_B,
+        precision_same,
+        precision_diff_A,
+        precision_diff_B,
+        save_dir,
+        eval_column,
+    )
+
 
 def print_aligned_stats(stats_dict):
     # キーと値の最大長を取得
     max_key_length = max(len(str(k)) for k in stats_dict.keys())
     max_value_length = max(len(f"{v*100:.2f}") for v in stats_dict.values())
-    
-    # フォーマット文字列を作成
+
+    # Create format string
     format_str = f"{{:<{max(max_key_length, 35)}}}: {{:>{max_value_length}.2f}}%"
-    
+
     for key, value in stats_dict.items():
-        print(format_str.format(key, value*100))
+        print(format_str.format(key, value * 100))
 
 
-def run_main(dataset_name, dataset_dir,pred_dir, eval_column):
+def run_main(dataset_name, dataset_dir, pred_dir, eval_column):
     save_dir = f"{pred_dir}/metric_results"
     os.makedirs(save_dir, exist_ok=True)
     path2gt = f"{dataset_dir}/GT/merged_gt.csv"
     path2pred = f"{pred_dir}/pred_data/{dataset_name}_pred_data.json"
 
-    print("GT PATH:",path2gt)
-    print("PRED PATH:",path2pred)
-    print("EVAL COLUMN:",eval_column)
-    print("SAVE DIR:",save_dir)
+    print("GT PATH:", path2gt)
+    print("PRED PATH:", path2pred)
+    print("EVAL COLUMN:", eval_column)
+    print("SAVE DIR:", save_dir)
     main(
         save_dir,
         path2gt,
         path2pred,
         eval_column,
     )
-    
-def save_result(num_all,num_same,num_diff,precision_A, precision_B, precision_same, precision_diff_A, precision_diff_B, save_dir, eval_column):
+
+
+def save_result(
+    num_all,
+    num_same,
+    num_diff,
+    precision_A,
+    precision_B,
+    precision_same,
+    precision_diff_A,
+    precision_diff_B,
+    save_dir,
+    eval_column,
+):
     with open(os.path.join(save_dir, f"{eval_column}_stats.txt"), "w") as f:
         f.write(f"num_all: {num_all}\n")
         f.write(f"num_same: {num_same}\n")
@@ -130,12 +164,24 @@ def save_result(num_all,num_same,num_diff,precision_A, precision_B, precision_sa
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset_name", type=str, default="pairwise_comparison", required=True)
-    parser.add_argument("--dataset_dir", type=str, default="danger_annotation_material/targets", required=True)
-    parser.add_argument("--pred_dir", type=str, default="results/0619_debug", required=True)
-    parser.add_argument("--eval_column", type=str, default="danger_score_clip", required=True)
+    parser.add_argument(
+        "--dataset_name", type=str, default="pairwise_comparison", required=True
+    )
+    parser.add_argument(
+        "--dataset_dir",
+        type=str,
+        default="danger_annotation_material/targets",
+        required=True,
+    )
+    parser.add_argument(
+        "--pred_dir", type=str, default="results/0619_debug", required=True
+    )
+    parser.add_argument(
+        "--eval_column", type=str, default="danger_score_clip", required=True
+    )
     args = parser.parse_args()
     return args
+
 
 def run_main():
     args = get_args()

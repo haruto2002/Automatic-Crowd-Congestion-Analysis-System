@@ -1,0 +1,46 @@
+get_frame:
+  script: "scripts/get_frame/run_get_frame.sh"
+  inputs:
+    - video_path
+    - img_dir
+detection: 
+  script: "scripts/p2pnet/run_fullsize_inference_ddp.sh"
+  inputs:
+    - weight_path
+    - img_dir
+    - detection_output_dir
+    - detection_data_dir
+tracking: 
+  script: "scripts/bytetrack/run_byte_track.sh"
+  inputs:
+    - detection_data_dir
+    - track_dir
+risk_analysis: 
+  script: "scripts/crowd_risk_score/run_crs.sh"
+  inputs:
+    - track_dir
+    - risk_output_dir
+    - bev_file
+    - size_file
+detection_visualization: 
+    script: "scripts/vis/plot_detection.sh"
+    inputs:
+      - img_dir
+      - detection_data_dir
+      - detection_vis_dir
+      - detection_vis_freq
+tracking_visualization: 
+    script: "scripts/vis/display_track.sh"
+    inputs:
+      - track_dir
+      - img_dir
+      - track_vis_dir
+      - track_vis_freq
+      # - track_vis_start_frame
+      # - track_vis_end_frame
+risk_analysis_visualization: 
+    script: "scripts/vis/plot_risk_analysis.sh"
+    inputs:
+      - track_dir
+      - img_dir
+      - risk_vis_dir
