@@ -14,7 +14,7 @@ def devide_polygon_regions(bev_file, original_square, size_file, path2img):
     corners = transformed_square.reshape(-1, 2)
     poly = Polygon(corners)
 
-    # 上下2:3に分割（下側が3/5、上側が2/5）
+    # Divide into top-bottom 2:3 ratio (bottom 3/5, top 2/5)
     bottom_part, top_part = split_polygon_horizontal_equal(poly, ratio=0.6)
 
     # 上側の領域を2等分、下側の領域を3等分
@@ -64,10 +64,10 @@ def split_polygon_horizontal_equal(
     poly: Polygon, ratio: float = 0.5, tol: float = 1e-6, max_iter: int = 50
 ):
     """
-    ポリゴン poly を水平線 y = cut で分割し、下側部分（y <= cut）が poly 面積 * ratio になるような cut を二分探索で探す。
+    Divide polygon poly with horizontal line y = cut, and find cut using binary search so that bottom part (y <= cut) becomes poly area * ratio.
     """
     if not poly.is_valid or poly.area <= 0:
-        raise ValueError("無効なポリゴンまたは面積 <= 0")
+        raise ValueError("Invalid polygon or area <= 0")
     total_area = poly.area
     target = total_area * ratio
 
@@ -96,7 +96,7 @@ def split_polygon_horizontal_equal(
     else:
         found_cut = (lo + hi) / 2
 
-    # 最終的な切断
+    # Final cut
     half_poly = box(
         minx - (maxx - minx) * 10,
         miny - (maxy - miny) * 10,
@@ -112,10 +112,10 @@ def split_polygon_vertical_equal(
     poly: Polygon, n: int, tol: float = 1e-6, max_iter: int = 50
 ):
     """
-    ポリゴン poly を垂直線 x = cut で分割し、左側部分（x <= cut）が poly 面積 * 1/n になるような cut を二分探索で探す。
+    Divide polygon poly with vertical line x = cut, and find cut using binary search so that left part (x <= cut) becomes poly area * 1/n.
     """
     if not poly.is_valid or poly.area <= 0:
-        raise ValueError("無効なポリゴンまたは面積 <= 0")
+        raise ValueError("Invalid polygon or area <= 0")
 
     total_area = poly.area
     target = total_area / n
@@ -153,7 +153,7 @@ def split_polygon_vertical_equal(
         else:
             found_cut = (lo + hi) / 2
 
-        # 最終的な切断
+        # Final cut
         half_poly = box(
             minx - (maxx - minx) * 10,
             miny - (maxy - miny) * 10,
@@ -191,7 +191,7 @@ def visualize_regions_on_bev_image(bev_img, regions, save_dir):
     """
     BEV画像上に分割された領域を描画
     """
-    # BGRからRGBに変換
+    # Convert from BGR to RGB
     bev_img_rgb = cv2.cvtColor(bev_img, cv2.COLOR_BGR2RGB)
 
     fig, ax = plt.subplots(figsize=(15, 12))

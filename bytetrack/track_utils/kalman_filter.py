@@ -249,7 +249,7 @@ class KalmanFilter(object):
             `measurements[i]`.
         """
         mean, covariance = self.project(mean, covariance)
-        # only_positionパラメータは効果がなくなりました（常に位置のみを使用するため）
+        # only_position parameter is no longer effective (always using position only)
         # しかし、後方互換性のために残しています
 
         d = measurements - mean

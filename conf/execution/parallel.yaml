@@ -1,0 +1,35 @@
+job1:
+  steps:
+    - get_frame
+  node_type: "rt_HC"
+  log_level: "INFO"
+  parallel: true
+  walltime: "6:00:00"
+
+job2:
+  steps:
+    - detection
+  node_type: "rt_HF"
+  parallel: false
+  log_level: "INFO"
+  walltime: "6:00:00"
+  num_use_node: 5
+
+job3:
+  steps:
+    - tracking
+  node_type: "rt_HC"
+  parallel: true
+  log_level: "INFO"
+  walltime: "6:00:00"
+
+job4:
+  steps:
+    - detection_visualization
+    - tracking_visualization
+  node_type: "rt_HC"
+  parallel: true
+  log_level: "INFO"
+  walltime: "6:00:00"
+
+  

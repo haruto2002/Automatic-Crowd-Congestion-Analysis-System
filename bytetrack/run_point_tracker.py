@@ -1,150 +1,70 @@
 import argparse
 import numpy as np
 from track_utils.byte_tracker import BYTETracker
-import json
 import pandas as pd
 import os
 import glob
 from tqdm import tqdm
+import logging
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from collections import defaultdict
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def make_parser():
     parser = argparse.ArgumentParser("ByteTrack Point Tracker")
+    parser.add_argument("--save_dir", type=str, default="byte_track/track_data")
     parser.add_argument(
-        "--save_dir",
-        type=str,
-        default="byte_track/track_data",
-        help="save directory",
+        "--source_dir", type=str, default="byte_track/full_detection/WorldPorters_noon"
     )
-    parser.add_argument(
-        "--source_dir",
-        type=str,
-        default="byte_track/full_detection/WorldPorters_noon",
-        help="source directory",
-    )
-    parser.add_argument(
-        "--img_h_size", type=int, default=4320, help="image height size"
-    )
-    parser.add_argument("--img_w_size", type=int, default=7680, help="image width size")
-    parser.add_argument(
-        "--track_thresh", type=float, default=0.6, help="tracking confidence threshold"
-    )
-    parser.add_argument(
-        "--track_buffer", type=int, default=30, help="the frames for keep lost tracks"
-    )
-    parser.add_argument(
-        "--match_thresh",
-        type=float,
-        default=10.0,
-        help="matching threshold for tracking",
-    )
+    parser.add_argument("--img_h_size", type=int, default=4320)
+    parser.add_argument("--img_w_size", type=int, default=7680)
+    parser.add_argument("--track_thresh", type=float, default=0.6)
+    parser.add_argument("--track_buffer", type=int, default=30)
+    parser.add_argument("--match_thresh", type=float, default=10.0)
     parser.add_argument(
         "--distance_metric",
         type=str,
         default="euclidean",
         choices=["maha", "euclidean"],
-        help="distance metric to use for matching (maha: マハラノビス距離, euclidean: ユークリッド距離)",
     )
+    parser.add_argument("--mot20", dest="mot20", default=False, action="store_true")
     parser.add_argument(
-        "--mot20", dest="mot20", default=False, action="store_true", help="test mot20."
+        "--log_level",
+        type=str,
+        default="INFO",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
     )
+    parser.add_argument("--max_frames", type=int, default=0, help="0: all, >0: limit")
     return parser
 
 
-def main():
-    parser = make_parser()
-    args = parser.parse_args()
-    print(args)
+# ---- 高速ローダ（並列 I/O） -----------------------------------------
+def _load_txt_to_np(path: str) -> np.ndarray:
+    return pd.read_csv(path, header=None, sep=r"\s+", dtype=np.float32).to_numpy()
 
-    save_detail = False
 
-    # トラッカーの初期化
-    tracker = BYTETracker(args)
-    img_size = (args.img_h_size, args.img_w_size)
-
-    # 距離計算メトリックの設定
-    tracker.distance_metric = args.distance_metric
-    print(f"Using distance metric: {tracker.distance_metric}")
-
-    print(f"Loaded detections from {args.source_dir}")
-    print("Producing tracking data")
-    path2det_list = sorted(glob.glob(f"{args.source_dir}/*.txt"))
-    all_results = []
-    all_data = []
-    for frame_id, path2det in enumerate(tqdm(path2det_list)):
-        # print(f"\nProcessing frame {frame_id+1}/{len(path2det_list)}")
-        detections = np.loadtxt(path2det)
-
-        online_targets = tracker.update(detections, img_size, img_size)
-
-        frame_results = []
-        save_data = []
-        for t in online_targets:
-            track_id = t.track_id
-            kalman_point = t.point.tolist()
-            detection_point = t.detection_point.tolist()
-            score = t.score
-            frame_results.append(
-                {
-                    "frame": frame_id + 1,
-                    "id": track_id,
-                    "det_x": detection_point[0],
-                    "det_y": detection_point[1],
-                    "kalman_x": kalman_point[0],
-                    "kalman_y": kalman_point[1],
-                    "score": score,
-                }
-            )
-
-            save_data.append([track_id, detection_point[0], detection_point[1]])
-
-        if save_detail:
-            save_dir = f"{args.save_dir}/frame_results"
-            os.makedirs(save_dir, exist_ok=True)
-            df = pd.DataFrame(save_data, columns=["id", "x", "y"])
-            df.sort_values(by="id", inplace=True)
-            df.to_csv(f"{save_dir}/{frame_id+1:04d}.csv", index=False)
-
-        all_results.extend(frame_results)
-        all_data.append(save_data)
-
-    if save_detail:
-        tracklets_by_id = {}
-        for result in all_results:
-            track_id = result["id"]
-            if track_id not in tracklets_by_id:
-                tracklets_by_id[track_id] = []
-            tracklets_by_id[track_id].append(result)
-
-        with open(f"{args.save_dir}/tracklets_by_id.json", "w") as f:
-            json.dump({str(k): v for k, v in tracklets_by_id.items()}, f, indent=2)
-
-    tracklets = {}
-    for i, frame_data in enumerate(all_data):
-        frame = i + 1
-        for data in frame_data:
-            track_id = data[0]
-            x = data[1]
-            y = data[2]
-            if track_id not in tracklets:
-                tracklets[track_id] = {}
-                tracklets[track_id]["frames"] = []
-                tracklets[track_id]["points"] = []
-            tracklets[track_id]["frames"].append(frame)
-            tracklets[track_id]["points"].append((x, y))
-    if save_detail:
-        with open(f"{args.save_dir}/tracklets.json", "w") as f:
-            json.dump(tracklets, f, indent=2)
-
-    # 補間処理と統合保存
-    interpolated_tracklets = interpolate_tracklets(tracklets)
-    if save_detail:
-        with open(f"{args.save_dir}/interpolated_tracklets.json", "w") as f:
-            json.dump(interpolated_tracklets, f, indent=2)
-
-    # 各フレームのtxtファイル作成（統合処理）
-    print(f"Creating frame txt files in {args.save_dir}")
-    create_frame_txt_files(interpolated_tracklets, args.save_dir, len(path2det_list))
+def load_all_detections(paths, workers: int, disable_tqdm: bool) -> list[np.ndarray]:
+    if workers <= 1:
+        return [
+            _load_txt_to_np(p)
+            for p in tqdm(paths, desc="Loading detections", disable=disable_tqdm)
+        ]
+    dets = [None] * len(paths)
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        futures = {ex.submit(_load_txt_to_np, p): i for i, p in enumerate(paths)}
+        for fut in tqdm(
+            as_completed(futures),
+            total=len(futures),
+            desc="Loading detections (parallel)",
+            disable=disable_tqdm,
+        ):
+            i = futures[fut]
+            dets[i] = fut.result()
+    return dets
 
 
 def interpolate_tracklets(tracklets):
@@ -176,31 +96,151 @@ def interpolate_tracklets(tracklets):
     return tracklets
 
 
-def create_frame_txt_files(interpolated_tracklets, save_dir, total_frames):
+# ---- Frame-by-frame output (parallel & fast with string buffer) -------------
+def _write_frame_txt(path: str, rows: list[list[float]]) -> None:
+    # np.savetxt tends to be slow with many small files. Use string concatenation for batch output.
+    # Format: id(int), x, y separated by commas
+    if not rows:
+        open(path, "w").close()
+        return
+    # Sort & stringify
+    rows.sort(key=lambda r: r[0])
+    lines = [
+        "{},{:.6f},{:.6f}\n".format(int(r[0]), float(r[1]), float(r[2])) for r in rows
+    ]
+    with open(path, "w") as f:
+        f.writelines(lines)
+
+
+def create_frame_txt_files(
+    interpolated_tracklets,
+    save_dir: str,
+    total_frames: int,
+    workers: int,
+    disable_tqdm: bool = False,
+):
     os.makedirs(save_dir, exist_ok=True)
+    frame_data = defaultdict(list)
 
-    frame_data = {}
+    # 各トラックの (frame, point) をフレーム側に寄せ集め
+    for track_id, tr in interpolated_tracklets.items():
+        tid = int(track_id)
+        frames = tr["frames"]
+        points = tr["points"]
+        append_local = frame_data.__getitem__  # ルックアップ短縮
+        for f, (x, y) in zip(frames, points):
+            append_local(f).append([tid, x, y])
 
-    for track_id, tracklet in interpolated_tracklets.items():
-        frames = tracklet["frames"]
-        points = tracklet["points"]
+    # 並列書き出し
+    tasks = []
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        for frame_num in range(1, total_frames + 1):
+            filename = os.path.join(save_dir, f"{frame_num:04d}.txt")
+            rows = frame_data.get(frame_num, [])
+            tasks.append(ex.submit(_write_frame_txt, filename, rows))
+        # 進捗バー
+        for _ in tqdm(
+            as_completed(tasks),
+            total=len(tasks),
+            desc="Writing frames",
+            disable=disable_tqdm,
+        ):
+            pass
 
-        for i, frame in enumerate(frames):
-            if frame not in frame_data:
-                frame_data[frame] = []
 
-            x, y = points[i]
-            frame_data[frame].append([int(track_id), float(x), float(y)])
+def main():
+    parser = make_parser()
+    args = parser.parse_args()
 
-    for frame_num in tqdm(range(1, total_frames + 1)):
-        filename = os.path.join(save_dir, f"{frame_num:04d}.txt")
+    # Set log level
+    logger = logging.getLogger()
+    logger.setLevel(getattr(logging, args.log_level.upper()))
+    disable_tqdm = logger.level >= logging.ERROR
 
-        if frame_num in frame_data:
-            data = frame_data[frame_num]
-            data.sort(key=lambda x: x[0])
-            np.savetxt(filename, data, fmt=["%d", "%.6f", "%.6f"], delimiter=",")
-        else:
-            open(filename, "w").close()
+    logger.info("=== ByteTrack Point Tracker started ===")
+
+    # Initialize tracker
+    tracker = BYTETracker(args)
+    tracker.distance_metric = args.distance_metric
+    img_size = (int(args.img_h_size), int(args.img_w_size))
+
+    # Detection file list
+    path2det_list = sorted(glob.glob(f"{args.source_dir}/*.txt"))
+    if not path2det_list:
+        raise FileNotFoundError(args.source_dir)
+    if args.max_frames > 0:
+        path2det_list = path2det_list[: args.max_frames]
+
+    time_A = time.time()
+
+    # 先読み I/O（並列）
+    io_workers = os.cpu_count()
+    dets_list = load_all_detections(
+        path2det_list, workers=io_workers, disable_tqdm=disable_tqdm
+    )
+
+    all_data = []
+    append_all = all_data.append
+
+    # 逐次追跡（ここは依存あり）
+    for detections in tqdm(dets_list, desc="Tracking", disable=disable_tqdm):
+        online_targets = tracker.update(detections, img_size, img_size)
+
+        n = len(online_targets)
+        if n == 0:
+            append_all(np.empty((0, 3), dtype=np.float32))
+            continue
+
+        out = np.empty((n, 3), dtype=np.float32)
+        for i, t in enumerate(online_targets):
+            dp = t.detection_point  # [x, y] (list/ndarray)
+            out[i, 0] = t.track_id
+            out[i, 1] = dp[0]
+            out[i, 2] = dp[1]
+        append_all(out)
+
+    time_B = time.time()
+    logger.info(f"Tracking completed in: {time_B - time_A:.2f} seconds")
+
+    # tracklets 構築（辞書→配列）
+    tracklets = {}
+    for frame_idx, frame_arr in enumerate(all_data, start=1):
+        if frame_arr.size == 0:
+            continue
+        # frame_arr: (N,3) = [id, x, y]
+        tids = frame_arr[:, 0].astype(np.int64)
+        xs = frame_arr[:, 1]
+        ys = frame_arr[:, 2]
+        for tid, x, y in zip(tids, xs, ys):
+            tr = tracklets.get(tid)
+            if tr is None:
+                tr = {"frames": [], "points": []}
+                tracklets[tid] = tr
+            tr["frames"].append(frame_idx)
+            tr["points"].append((float(x), float(y)))
+
+    time_C = time.time()
+    logger.info(f"Tracklets generation completed in: {time_C - time_B:.2f} seconds")
+
+    interpolated_tracklets = interpolate_tracklets(tracklets)
+
+    time_D = time.time()
+    logger.info(f"Interpolation completed in: {time_D - time_C:.2f} seconds")
+
+    # Save txt files by frame (parallel)
+    logger.info("Saving...")
+    save_workers = os.cpu_count()
+    create_frame_txt_files(
+        interpolated_tracklets,
+        args.save_dir,
+        total_frames=len(path2det_list),
+        workers=save_workers,
+        disable_tqdm=disable_tqdm,
+    )
+
+    time_E = time.time()
+    logger.info(f"Save completed in: {time_E - time_D:.2f} seconds")
+    logger.info("=== Completed ===")
 
 
 if __name__ == "__main__":

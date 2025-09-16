@@ -1,0 +1,36 @@
+experiment_name: "parallel_time_test"
+result_save_dir: "outputs/${experiment_name}/results"
+job_id: null
+hydra:
+  run:
+    dir: "outputs/${experiment_name}/hydra_log"
+
+defaults:
+  - _self_
+  - io_info: parallel
+  - execution: parallel
+  - pipeline: parallel
+
+settings:
+  #====入力設定====
+  IO_info_dir: "${hydra:run.dir}/IO_info"
+  detection_weight_path: "cutout.pth"
+  #====可視化設定====
+  detection_vis_freq: 30
+  track_vis_freq: 5
+  #====出力設定====
+  img_sub_dir: "img"
+  detection_output_sub_dir: "detection"
+  detection_data_sub_dir: "detection/frame_detection"
+  track_sub_dir: "track"
+  detection_vis_sub_dir: "detection_vis_${settings.detection_vis_freq}"
+  track_vis_sub_dir: "track_vis_${settings.track_vis_freq}"
+
+qsub_script:
+  save_dir: "${hydra:run.dir}/run_script"
+  qsub_magic:
+    num_node: 1
+    group: "gaa50073"
+    log_dir: "${hydra:run.dir}/log/"
+    cwd: "/home/aag16599bn/research/Automatic-Crowd-Congestion-Analysis-System"
+    env_path: "~/miniconda3/bin/activate hnakayama"

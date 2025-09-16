@@ -1,11 +1,8 @@
 #!/bin/bash
-#SBATCH -p cpu1
-#SBATCH -o /homes/hnakayama/congestion_analysis/log/%x-%j.out
-#SBATCH -e /homes/hnakayama/congestion_analysis/log/%x-%j.out
 
-source ~/miniconda3/bin/activate hnakayama2
+source ~/miniconda3/bin/activate hnakayama
 
-WORKDIR="/homes/hnakayama/congestion_analysis"
+WORKDIR=~/research/Automatic-Crowd-Congestion-Analysis-System
 cd $WORKDIR
 
 # IMG_DIR=demo/img

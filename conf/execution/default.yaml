@@ -1,0 +1,10 @@
+pipeline:
+  - get_frame
+  - detection
+  - tracking
+  # - risk_analysis
+  - detection_visualization
+  - tracking_visualization
+  # - risk_analysis_visualization
+log_level: "INFO"
+step_log_level: "ERROR"

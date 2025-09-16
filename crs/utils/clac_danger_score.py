@@ -2,19 +2,22 @@ import numpy as np
 from scipy.spatial.distance import cdist
 import cv2
 
+
 # 流量変化
-def clac_div_origin(around_data, center_pos, func_para, distance_decay, vec_decay_method=None):
+def clac_div_origin(
+    around_data, center_pos, func_para, distance_decay, vec_decay_method=None
+):
     decay, max_x, clip_value = func_para
     vx_list = []
     vy_list = []
     # print("vec_decay_method: ", vec_decay_method)
     for pos, vec in around_data:
-        if vec_decay_method =="exp_func":
-            vx,vy=exp_decay(vec[0]),exp_decay(vec[1])
+        if vec_decay_method == "exp_func":
+            vx, vy = exp_decay(vec[0]), exp_decay(vec[1])
         elif vec_decay_method == "clip":
-            vx,vy=clip(vec[0],vec[1],clip_value)
+            vx, vy = clip(vec[0], vec[1], clip_value)
         elif vec_decay_method is None:
-            vx,vy=vec[0],vec[1]
+            vx, vy = vec[0], vec[1]
         else:
             raise ValueError(f"Invalid vec_decay_method: {vec_decay_method}")
         if pos[0] < center_pos[0]:
@@ -35,8 +38,9 @@ def clac_div_origin(around_data, center_pos, func_para, distance_decay, vec_deca
         decay_vx_array = vx_array * distance_decay
         decay_vy_array = vy_array * distance_decay
         div = np.sum(decay_vx_array) + np.sum(decay_vy_array)
-    div_danger_score=-div
+    div_danger_score = -div
     return div_danger_score
+
 
 def exp_decay(v, a=12.0):
     if v > 0:
@@ -44,18 +48,21 @@ def exp_decay(v, a=12.0):
     else:
         return -0.3 * (1 - np.exp(a * v))
 
+
 # 回転
-def clac_curl_origin(around_data, center_pos, func_para, distance_decay, vec_decay_method=None):
+def clac_curl_origin(
+    around_data, center_pos, func_para, distance_decay, vec_decay_method=None
+):
     decay, max_x, clip_value = func_para
     vx_list = []
     vy_list = []
     for pos, vec in around_data:
-        if vec_decay_method =="exp_func":
-            vx,vy=exp_decay(vec[0]),exp_decay(vec[1])
+        if vec_decay_method == "exp_func":
+            vx, vy = exp_decay(vec[0]), exp_decay(vec[1])
         elif vec_decay_method == "clip":
-            vx,vy=clip(vec[0],vec[1],clip_value)
+            vx, vy = clip(vec[0], vec[1], clip_value)
         elif vec_decay_method is None:
-            vx,vy=vec[0],vec[1]
+            vx, vy = vec[0], vec[1]
         else:
             raise ValueError(f"Invalid vec_decay_method: {vec_decay_method}")
         # get x方向でy成分
@@ -80,9 +87,10 @@ def clac_curl_origin(around_data, center_pos, func_para, distance_decay, vec_dec
         decay_vx_array = vx_array * distance_decay
         decay_vy_array = vy_array * distance_decay
         curl = np.sum(decay_vx_array) - np.sum(decay_vy_array)
-    
-    curl_danger_score=abs(curl)
+
+    curl_danger_score = abs(curl)
     return curl_danger_score
+
 
 def get_vec_var(around_data, func_para, distance_decay):
     decay, max_x, clip_value = func_para
@@ -99,46 +107,88 @@ def get_vec_var(around_data, func_para, distance_decay):
     decay_vx_array = vx_array * distance_decay
     decay_vy_array = vy_array * distance_decay
     vec_array = np.column_stack([decay_vx_array, decay_vy_array])
-    avg_vec = np.sum(vec_array,axis=0)/np.sum(distance_decay)
-    diff_norms = np.sum((original_vec_array-avg_vec)**2, axis=1)*distance_decay
-    vec_var = np.sum(diff_norms)/np.sum(distance_decay)
+    avg_vec = np.sum(vec_array, axis=0) / np.sum(distance_decay)
+    diff_norms = np.sum((original_vec_array - avg_vec) ** 2, axis=1) * distance_decay
+    vec_var = np.sum(diff_norms) / np.sum(distance_decay)
     return vec_var
 
-# 回転×密度
-def calc_div(around_data, center_pos, func_para, distance_decay_method=None, max_x=100,vec_decay_method=None):
-    if distance_decay_method is None:
-        density=len(around_data)
-        distance_decay = None
-    elif distance_decay_method == "gaussian":
-        density, distance_decay = get_gaussian_kernel_density(center_pos, around_data[:,0],R=max_x)
-    elif distance_decay_method == "liner":
-        density, distance_decay = get_liner_decay_density(center_pos, around_data[:,0],max_x=max_x)
-    div = clac_div_origin(around_data, center_pos, func_para, distance_decay, vec_decay_method=vec_decay_method)
-    return div*density,density
-    
-# 回転×密度
-def calc_curl(around_data, center_pos, func_para, distance_decay_method=None, max_x=100,vec_decay_method=None):
-    if distance_decay_method is None:
-        density=len(around_data)
-        distance_decay = None
-    elif distance_decay_method == "gaussian":
-        density, distance_decay = get_gaussian_kernel_density(center_pos, around_data[:,0],R=max_x)
-    elif distance_decay_method == "liner":
-        density, distance_decay = get_liner_decay_density(center_pos, around_data[:,0],max_x=max_x)
-    curl = clac_curl_origin(around_data, center_pos, func_para, distance_decay, vec_decay_method=vec_decay_method)
-    return curl*density,density
-    
-def calc_crowd_pressure(around_data, center_pos, func_para, distance_decay_method="gaussian",max_x=100):
-    if distance_decay_method is None:
-        density=len(around_data)
-        distance_decay = None
-    elif distance_decay_method == "gaussian":
-        density, distance_decay = get_gaussian_kernel_density(center_pos, around_data[:,0],R=max_x)
-    elif distance_decay_method == "liner":
-        density, distance_decay = get_liner_decay_density(center_pos, around_data[:,0],max_x=max_x)
-    vec_var = get_vec_var(around_data, func_para, distance_decay)
-    return vec_var*density,density
 
+# 回転×密度
+def calc_div(
+    around_data,
+    center_pos,
+    func_para,
+    distance_decay_method=None,
+    max_x=100,
+    vec_decay_method=None,
+):
+    if distance_decay_method is None:
+        density = len(around_data)
+        distance_decay = None
+    elif distance_decay_method == "gaussian":
+        density, distance_decay = get_gaussian_kernel_density(
+            center_pos, around_data[:, 0], R=max_x
+        )
+    elif distance_decay_method == "liner":
+        density, distance_decay = get_liner_decay_density(
+            center_pos, around_data[:, 0], max_x=max_x
+        )
+    div = clac_div_origin(
+        around_data,
+        center_pos,
+        func_para,
+        distance_decay,
+        vec_decay_method=vec_decay_method,
+    )
+    return div * density, density
+
+
+# 回転×密度
+def calc_curl(
+    around_data,
+    center_pos,
+    func_para,
+    distance_decay_method=None,
+    max_x=100,
+    vec_decay_method=None,
+):
+    if distance_decay_method is None:
+        density = len(around_data)
+        distance_decay = None
+    elif distance_decay_method == "gaussian":
+        density, distance_decay = get_gaussian_kernel_density(
+            center_pos, around_data[:, 0], R=max_x
+        )
+    elif distance_decay_method == "liner":
+        density, distance_decay = get_liner_decay_density(
+            center_pos, around_data[:, 0], max_x=max_x
+        )
+    curl = clac_curl_origin(
+        around_data,
+        center_pos,
+        func_para,
+        distance_decay,
+        vec_decay_method=vec_decay_method,
+    )
+    return curl * density, density
+
+
+def calc_crowd_pressure(
+    around_data, center_pos, func_para, distance_decay_method="gaussian", max_x=100
+):
+    if distance_decay_method is None:
+        density = len(around_data)
+        distance_decay = None
+    elif distance_decay_method == "gaussian":
+        density, distance_decay = get_gaussian_kernel_density(
+            center_pos, around_data[:, 0], R=max_x
+        )
+    elif distance_decay_method == "liner":
+        density, distance_decay = get_liner_decay_density(
+            center_pos, around_data[:, 0], max_x=max_x
+        )
+    vec_var = get_vec_var(around_data, func_para, distance_decay)
+    return vec_var * density, density
 
 
 # 中心点に向かってくる力はそのまま、離れていく力は減衰させる関数
@@ -146,7 +196,7 @@ def calc_crowd_pressure(around_data, center_pos, func_para, distance_decay_metho
 # 流出量
 def relu_like_plus(
     data, decay=10
-):  # 中心より右(xがプラス側)もしくは下(yがプラス側)の場合
+):  # When right of center (positive x) or below center (positive y)
     if data > 0:
         return data * decay
         # return 0
@@ -157,12 +207,13 @@ def relu_like_plus(
 # 流入量
 def relu_like_minus(
     data, decay=10
-):  # 中心より左(xがマイナス側)もしくは上(yがマイナス側)の場合
+):  # When left of center (negative x) or above center (negative y)
     if data < 0:
         return -data * decay
         # return 0
     else:
         return -data
+
 
 # 速度の大きさに上限を設定
 def clip(vx, vy, clip_value=0.5):
@@ -170,38 +221,41 @@ def clip(vx, vy, clip_value=0.5):
         return vx, vy
     return min(vx, clip_value), min(vy, clip_value)
 
-def get_gaussian_kernel_density(eval_point,positions, R=0.3):
-    if len(positions)==0:
-        return 0,None
+
+def get_gaussian_kernel_density(eval_point, positions, R=0.3):
+    if len(positions) == 0:
+        return 0, None
     if positions.ndim == 1:
         positions = np.expand_dims(positions, axis=0)
-    # 距離行列: 各グリッド点から歩行者までの距離 (H*W, N)
+    # Distance matrix: distance from each grid point to pedestrians (H*W, N)
     distances = cdist(np.expand_dims(eval_point, axis=0), positions)  # shape: (1, N)
 
     # Gaussian Kernel の適用
-    kernel_vals = np.exp(-0.5 * (distances / R)**2) / (2 * np.pi * R**2)  # (1, N)
+    kernel_vals = np.exp(-0.5 * (distances / R) ** 2) / (2 * np.pi * R**2)  # (1, N)
 
-    # 各グリッドにおける密度：各人からの影響を合計
+    # Density at each grid: sum of influence from each person
     density = np.sum(kernel_vals[0])
 
     return density, kernel_vals[0]
 
-def get_liner_decay_density(eval_point,positions, max_x=100):
-    if len(positions)==0:
-        return 0,None
+
+def get_liner_decay_density(eval_point, positions, max_x=100):
+    if len(positions) == 0:
+        return 0, None
     if positions.ndim == 1:
         positions = np.expand_dims(positions, axis=0)
-    # 距離行列: 各グリッド点から歩行者までの距離 (H*W, N)
+    # Distance matrix: distance from each grid point to pedestrians (H*W, N)
     distances = cdist(np.expand_dims(eval_point, axis=0), positions)  # shape: (1, N)
 
-    decay_vals=[distance_liner_decay(d, max_x) for d in distances[0]]
+    decay_vals = [distance_liner_decay(d, max_x) for d in distances[0]]
 
-    # 各グリッドにおける密度：各人からの影響を合計
+    # Density at each grid: sum of influence from each person
     density = np.sum(decay_vals)
 
     return density, decay_vals
 
-# 中心からの距離で減衰
+
+# Decay based on distance from center
 def distance_liner_decay(d, max_x=100):
     max_y = 1  # 切片
     # max_x = 200  # x軸との交点
@@ -211,8 +265,15 @@ def distance_liner_decay(d, max_x=100):
         return 0
 
 
-
-def get_map_data(size, vec_data, grid_size, func_para, dan_ver=None, distance_decay_method=None,vec_decay_method=None):
+def get_map_data(
+    size,
+    vec_data,
+    grid_size,
+    func_para,
+    dan_ver=None,
+    distance_decay_method=None,
+    vec_decay_method=None,
+):
     # vec_data.shape >> (num_people, pos(2), vec(2))
     refine = False
     if refine:
@@ -227,7 +288,7 @@ def get_map_data(size, vec_data, grid_size, func_para, dan_ver=None, distance_de
     density_map = np.zeros((len(y_bins) - 1, len(x_bins) - 1))
     decay, max_x, clip_value = func_para
     if distance_decay_method == "gaussian":
-        around_range = max_x*3
+        around_range = max_x * 3
     elif distance_decay_method == "liner" or distance_decay_method is None:
         around_range = max_x
     else:
@@ -253,11 +314,31 @@ def get_map_data(size, vec_data, grid_size, func_para, dan_ver=None, distance_de
                 continue
 
             if dan_ver == "div":
-                div, density = calc_div(around_data, center_pos, func_para,distance_decay_method=distance_decay_method, max_x=max_x,vec_decay_method=vec_decay_method)
+                div, density = calc_div(
+                    around_data,
+                    center_pos,
+                    func_para,
+                    distance_decay_method=distance_decay_method,
+                    max_x=max_x,
+                    vec_decay_method=vec_decay_method,
+                )
             elif dan_ver == "curl":
-                div, density = calc_curl(around_data, center_pos, func_para,distance_decay_method=distance_decay_method, max_x=max_x,vec_decay_method=vec_decay_method)
+                div, density = calc_curl(
+                    around_data,
+                    center_pos,
+                    func_para,
+                    distance_decay_method=distance_decay_method,
+                    max_x=max_x,
+                    vec_decay_method=vec_decay_method,
+                )
             elif dan_ver == "crowd_pressure":
-                div, density = calc_crowd_pressure(around_data, center_pos, func_para,distance_decay_method=distance_decay_method, max_x=max_x)
+                div, density = calc_crowd_pressure(
+                    around_data,
+                    center_pos,
+                    func_para,
+                    distance_decay_method=distance_decay_method,
+                    max_x=max_x,
+                )
             else:
                 raise ValueError(f"Invalid dan_ver: {dan_ver}")
             danger_map[i, j] = div
@@ -268,16 +349,18 @@ def get_map_data(size, vec_data, grid_size, func_para, dan_ver=None, distance_de
             danger_map,
             (danger_map.shape[0] // refine_size, danger_map.shape[1] // refine_size),
             interpolation=cv2.INTER_LINEAR,
-        ) 
+        )
         density_map = cv2.resize(
             density_map,
             (density_map.shape[0] // refine_size, density_map.shape[1] // refine_size),
             interpolation=cv2.INTER_LINEAR,
-        ) 
+        )
     return danger_map, density_map
 
 
-def get_grid_vec_data(size, vec_data_stack_list, grid_size=3, distance_decay_method=None, R=0.3):
+def get_grid_vec_data(
+    size, vec_data_stack_list, grid_size=3, distance_decay_method=None, R=0.3
+):
     # vec_data_stack_list.shape >> (stack_frame_num, num_people, pos(2), vec(2))
     x_size, y_size = size
     # assert x_size % grid_size == 0 and y_size % grid_size == 0
@@ -286,7 +369,7 @@ def get_grid_vec_data(size, vec_data_stack_list, grid_size=3, distance_decay_met
     grid_vec_data = np.zeros((len(y_bins) - 1, len(x_bins) - 1, 2, 2))
     decay_density_map = np.zeros((len(y_bins) - 1, len(x_bins) - 1))
     # grid_vec_data >> (y_size, x_size, pos(2), vec(2))
-    around_range = R*3
+    around_range = R * 3
     for i in range(len(y_bins) - 1):
         for j in range(len(x_bins) - 1):
             # グリッドの中心座標を計算
@@ -306,7 +389,9 @@ def get_grid_vec_data(size, vec_data_stack_list, grid_size=3, distance_decay_met
                 if k == 0:
                     grid_data_stack = grid_data
                 else:
-                    grid_data_stack = np.concatenate([grid_data_stack, grid_data], axis=0)
+                    grid_data_stack = np.concatenate(
+                        [grid_data_stack, grid_data], axis=0
+                    )
 
             if len(grid_data_stack) == 0:
                 avg_vec = np.array([np.nan, np.nan])
@@ -326,13 +411,17 @@ def get_grid_vec_data(size, vec_data_stack_list, grid_size=3, distance_decay_met
                 if distance_decay_method is None:
                     density += len(around_data)
                 elif distance_decay_method == "gaussian":
-                    decay_density, kernel_vals = get_gaussian_kernel_density(center_pos, around_data[:,0], R=R)
+                    decay_density, kernel_vals = get_gaussian_kernel_density(
+                        center_pos, around_data[:, 0], R=R
+                    )
                     density += decay_density
                 elif distance_decay_method == "liner":
-                    decay_density, kernel_vals = get_liner_decay_density(center_pos, around_data[:, 0], max_x=R)
+                    decay_density, kernel_vals = get_liner_decay_density(
+                        center_pos, around_data[:, 0], max_x=R
+                    )
                     density += decay_density
-                   
-            decay_density_map[i, j] = density/len(vec_data_stack_list)
+
+            decay_density_map[i, j] = density / len(vec_data_stack_list)
     return grid_vec_data, decay_density_map
 
 
@@ -411,16 +500,16 @@ def get_CL_map(curl_map, grid_vec_data, roi_size=3):
                 ]
                 # 3次元配列を2次元配列に変換
                 vec_in_roi_flat = vec_in_roi.reshape(-1, 2)
-                # nanを含まない有効なベクトルのみを抽出
+                # Extract only valid vectors without nan
                 valid_vecs = vec_in_roi_flat[~np.isnan(vec_in_roi_flat).any(axis=1)]
 
                 if len(valid_vecs) > 0:
-                    # 有効なベクトルのノルムの平均を計算
+                    # Calculate average norm of valid vectors
                     avg_vec_norm = np.mean(np.linalg.norm(valid_vecs, axis=1))
                 else:
                     avg_vec_norm = 0
 
-                # 周辺7x7のマスの中の速度の平均のノルムが0の場合は0を返す
+                # Return 0 if average norm of velocity in surrounding 7x7 cells is 0
                 if avg_vec_norm == 0:
                     CL_map[i, j] = 0
                 else:
@@ -429,27 +518,43 @@ def get_CL_map(curl_map, grid_vec_data, roi_size=3):
     return CL_map
 
 
-def calc_Cd_map(size, vec_data_stack_list, grid_size, roi_size=3, distance_decay_method=None, max_x=100):
-    grid_vec_data, decay_density_map = get_grid_vec_data(size, vec_data_stack_list, grid_size=grid_size, distance_decay_method=distance_decay_method, R=max_x)
+def calc_Cd_map(
+    size,
+    vec_data_stack_list,
+    grid_size,
+    roi_size=3,
+    distance_decay_method=None,
+    max_x=100,
+):
+    grid_vec_data, decay_density_map = get_grid_vec_data(
+        size,
+        vec_data_stack_list,
+        grid_size=grid_size,
+        distance_decay_method=distance_decay_method,
+        R=max_x,
+    )
     # display_vec_data(grid_vec_data,grid_size)
     curl_map = get_curl_map(grid_vec_data, grid_size)
     CL_map = get_CL_map(curl_map, grid_vec_data, roi_size)
     assert decay_density_map.shape == CL_map.shape
     Cd_map = CL_map * decay_density_map
-    return Cd_map,decay_density_map,grid_vec_data
+    return Cd_map, decay_density_map, grid_vec_data
 
-def display_vec_data(grid_vec_data,grid_size):
-    img=np.zeros((1100,1500,3),dtype=np.uint8)+255
+
+def display_vec_data(grid_vec_data, grid_size):
+    img = np.zeros((1100, 1500, 3), dtype=np.uint8) + 255
     for i in range(0, img.shape[0], grid_size):
         cv2.line(img, (0, i), (img.shape[1], i), (200, 200, 200), 1)
     for j in range(0, img.shape[1], grid_size):
         cv2.line(img, (j, 0), (j, img.shape[0]), (200, 200, 200), 1)
-    vec_data=grid_vec_data.reshape(-1,2,2)
-    for pos,vec in vec_data:
+    vec_data = grid_vec_data.reshape(-1, 2, 2)
+    for pos, vec in vec_data:
         if np.isnan(vec[1]).all():
             continue
-        x,y=pos
-        vec_x,vec_y=vec*100
-        cv2.arrowedLine(img,(int(x),int(y)),(int(x+vec_x),int(y+vec_y)),(0,255,0),2)
-    cv2.imwrite("vec_data.png",img)
+        x, y = pos
+        vec_x, vec_y = vec * 100
+        cv2.arrowedLine(
+            img, (int(x), int(y)), (int(x + vec_x), int(y + vec_y)), (0, 255, 0), 2
+        )
+    cv2.imwrite("vec_data.png", img)
     # return img

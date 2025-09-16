@@ -1,0 +1,39 @@
+get_frame:
+  script: "scripts/get_frame/run_get_frame_parallel.sh"
+  inputs:
+    - IO_info_file
+    - img_sub_dir
+
+detection: 
+  script: "scripts/p2pnet/run_fullsize_inference_ddp_multi_video.sh"
+  inputs:
+    - detection_weight_path
+    - IO_info_file
+    - img_sub_dir
+    - detection_output_sub_dir
+    - detection_data_sub_dir
+
+tracking: 
+  script: "scripts/bytetrack/run_byte_track_parallel.sh"
+  inputs:
+    - IO_info_file
+    - detection_data_sub_dir
+    - track_sub_dir
+
+detection_visualization:
+  script: "scripts/vis/detection/plot_detection_multi_video.sh"
+  inputs:
+    - IO_info_file
+    - img_sub_dir
+    - detection_data_sub_dir
+    - detection_vis_sub_dir
+    - detection_vis_freq
+
+tracking_visualization:
+  script: "scripts/vis/tracking/display_track_multi_video.sh"
+  inputs:
+    - IO_info_file
+    - track_sub_dir
+    - img_sub_dir
+    - track_vis_sub_dir
+    - track_vis_freq

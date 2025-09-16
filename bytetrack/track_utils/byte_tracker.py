@@ -131,9 +131,9 @@ class STrack(BaseTrack):
         if self.mean is None:
             return self._tlwh.copy()
 
-        # カルマンフィルターの状態が(x, y, vx, vy)の場合
-        # 中心座標(x, y)から左上座標に変換
-        # 幅と高さは元のバウンディングボックスから保持
+        # When Kalman filter state is (x, y, vx, vy)
+        # Convert from center coordinates (x, y) to top-left coordinates
+        # Keep width and height from original bounding box
         ret = self._tlwh.copy()
         ret[:2] = self.mean[:2] - self._tlwh[2:] / 2
         return ret
@@ -193,9 +193,9 @@ class BYTETracker(object):
         self.max_time_lost = self.buffer_size
         self.kalman_filter = KalmanFilter()
         self.match_thresh = args.match_thresh
-        self.point_matching = True  # ポイントベースのマッチングを使用
+        self.point_matching = True  # Use point-based matching
 
-        # 距離計算メトリック（'maha'または'euclidean'）
+        # Distance calculation metric ('maha' or 'euclidean')
         self.distance_metric = args.distance_metric
 
     def update(self, output_results, img_info, img_size):
@@ -205,13 +205,13 @@ class BYTETracker(object):
         lost_stracks = []
         removed_stracks = []
 
-        if output_results.shape[1] == 3:  # ポイントデータ [x, y, score]
+        if output_results.shape[1] == 3:  # Point data [x, y, score]
             scores = output_results[:, 2]
             points = output_results[:, :2]  # x, y
-        elif output_results.shape[1] == 5:  # 従来のバウンディングボックスデータ
+        elif output_results.shape[1] == 5:  # Traditional bounding box data
             scores = output_results[:, 4]
             bboxes = output_results[:, :4]
-            # バウンディングボックスから中心点を計算
+            # Calculate center point from bounding box
             points = np.column_stack(
                 [
                     (bboxes[:, 0] + bboxes[:, 2]) / 2,  # center x
@@ -222,7 +222,7 @@ class BYTETracker(object):
             output_results = output_results.cpu().numpy()
             scores = output_results[:, 4] * output_results[:, 5]
             bboxes = output_results[:, :4]  # x1y1x2y2
-            # バウンディングボックスから中心点を計算
+            # Calculate center point from bounding box
             points = np.column_stack(
                 [
                     (bboxes[:, 0] + bboxes[:, 2]) / 2,  # center x
@@ -267,9 +267,9 @@ class BYTETracker(object):
         # Predict the current location with KF
         STrack.multi_predict(strack_pool)
 
-        # 距離ベースのマッチングを使用
+        # Use distance-based matching
         if self.point_matching:
-            # カルマンフィルターの選択した距離メトリックを使用する
+            # Use selected distance metric of Kalman filter
             dists = maha_distance(
                 strack_pool, detections, self.kalman_filter, metric=self.distance_metric
             )
@@ -312,7 +312,7 @@ class BYTETracker(object):
         ]
 
         if self.point_matching:
-            # 距離ベースのマッチングを使用
+            # Use distance-based matching
             dists = maha_distance(
                 r_tracked_stracks,
                 detections_second,
@@ -320,7 +320,7 @@ class BYTETracker(object):
                 metric=self.distance_metric,
             )
         else:
-            # 従来のIoU距離を使用
+            # Use traditional IoU distance
             dists = iou_distance(r_tracked_stracks, detections_second)
 
         matches, u_track, u_detection_second = linear_assignment(
@@ -346,7 +346,7 @@ class BYTETracker(object):
         detections = [detections[i] for i in u_detection]
 
         if self.point_matching:
-            # 距離ベースのマッチングを使用（未確認トラックには常にユークリッド距離を使用）
+            # Use distance-based matching (always use Euclidean distance for unconfirmed tracks)
             dists = maha_distance(
                 unconfirmed,
                 detections,
@@ -354,7 +354,7 @@ class BYTETracker(object):
                 metric=self.distance_metric,
             )
         else:
-            # 従来のIoU距離を使用
+            # Use traditional IoU distance
             dists = iou_distance(unconfirmed, detections)
 
         if not self.args.mot20:
@@ -432,10 +432,8 @@ def sub_stracks(tlista, tlistb):
 
 
 def remove_duplicate_stracks(stracksa, stracksb):
-    # 距離ベースのマッチングを使用
     pdist = euclidean_distance(stracksa, stracksb)
 
-    # しきい値10.0以下の距離を重複として扱う
     pairs = np.where(pdist < 10.0)
     dupa, dupb = list(), list()
     for p, q in zip(*pairs):

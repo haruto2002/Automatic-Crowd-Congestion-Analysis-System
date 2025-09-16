@@ -1,11 +1,16 @@
 log
 demo*
 debug*
+.vscode/
 *.pth
 *.mov
 *.mp4
 *.MOV
 __pycache__/
+.mypy_cache
+
+output*
+samples
 
 run_pipeline_demo.sh
 
@@ -13,3 +18,12 @@ yokohama/Akarenga
 yokohama/Chosha
 yokohama/Kokusaibashi
 yokohama/WorldPorter
+
+false_list.txt
+memo.txt
+local_cmd_script
+points.png
+run_pipeline_pre.sh
+
+parallel_samples
+parallel_hydra

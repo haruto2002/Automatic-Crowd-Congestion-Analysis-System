@@ -1,11 +1,8 @@
 #!/bin/bash
-#SBATCH -p gpu2
-#SBATCH -o /homes/hnakayama/congestion_analysis/log/%x-%j.out
-#SBATCH -e /homes/hnakayama/congestion_analysis/log/%x-%j.out
 
-source ~/miniconda3/bin/activate hnakayama2
+source ~/miniconda3/bin/activate hnakayama
 
-WORKDIR="/homes/hnakayama/congestion_analysis"
+WORKDIR=~/research/Automatic-Crowd-Congestion-Analysis-System
 cd $WORKDIR
 
 # PATCH_OUT_DIR="demo/patch_detection/"
@@ -24,13 +21,13 @@ WEIGHT_PATH=$2
 IMG_DIR=$3
 FULL_OUT_DIR=$4
 
-python p2pnet/run_inference_ddp.py p2p \
+python p2pnet/run_patch_inference_ddp.py p2p \
     out_dir=$PATCH_OUT_DIR \
     default.finetune=True \
     network.init_weight=$WEIGHT_PATH \
-    optimizer.batch_size.test=2 \
+    optimizer.batch_size.test=4 \
     default.bar=True \
-    default.num_workers=2 \
+    default.num_workers=4 \
     img_dir=$IMG_DIR \
 
 python p2pnet/prediction/merge_detections.py \

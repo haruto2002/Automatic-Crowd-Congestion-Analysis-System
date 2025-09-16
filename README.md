@@ -22,42 +22,56 @@ bash setup.sh
 
 # Run Pipeline
 
-## How to Run
+## How to Run on ABCI
+
+### Run on a Node (Interactive)
 ```bash
-bash run_pipeline.sh <PATH2VIDEO> <SAVE_DIR> <WEIGHT_PATH> <BEV_FILE> <SIZE_FILE>
+python run_job_hydra.py hydra.run.dir=<SAVE_DIR> settings.video_path=<PATH2VIDEO>
 ```
 
-### Variable Descriptions
-- `PATH2VIDEO`: Path to the input video file
-- `SAVE_DIR`: Root directory to save all output files and directories
-- `WEIGHT_PATH`: Weight file for P2PNet
-- `BEV_FILE`: Homography matrix file
-- `SIZE_FILE`: Map size file after homography transformation
+When running experiments via shell:
+```bash
+bash run_pipeline.sh <EXP_NAME> <PATH2VIDEO>
+```
+
+### Job Submission
+```bash
+qsub -v EXP_NAME={exp_name},VIDEO_PATH={video_path} run_pipeline.sh
+```
+
+### Configuration Descriptions
+
+`run_job_hydra.py` uses the Hydra framework to manage configurations and execute the pipeline. Configuration files are located in the `conf/` directory.
+
+`conf/config.yaml`: Main configuration file
+
+`conf/execution/default.yaml`: Specifies the pipeline to execute
+
+`conf/pipeline/default.yaml`: Defines execution scripts and input parameters for each step
+
 
 ## Output Directory Structure
 ```
 SAVE_DIR/
-├── img/                      # Frame images extracted from the video
-│   ├── 0001.png
-│   ├── 0002.png
-│   └── ...
-├── patch_detection/          # Detection results for each patch (P2PNet output)
-│   ├── 0001.txt
-│   ├── 0002.txt
-│   └── ...
-├── full_detection/           # Merged detection results for the whole image
-│   ├── 0001.txt
-│   ├── 0002.txt
-│   └── ...
-├── detection_plot/           # Visualization of detections
-├── track/                    # Tracking results (ByteTrack output)
-│   ├── 0001.txt
-│   ├── 0002.txt
-│   └── ...
-├── crowd_risk_score/         # Output of crowd risk score
-├── risk_heatmap/             # Visualization of risk estimation
-└── time_log.txt             # Log of processing time for each step
+├── .hydra/ 
+├── results/
+│   ├── img/                      # Frame images extracted from the video
+│   ├── detection/           # Merged detection results for the whole 
+│   ├── detection_vis/           # Visualization of detections
+│   ├── track/
+│   ├── track_vis/                    # Tracking results (ByteTrack output)
+│   ├── crowd_risk_score/         # Output of crowd risk score
+│   ├── risk_heatmap/             # Visualization of risk estimation
+│   └── time_log.txt             # Log of processing time for each step
+└── run_job_hydra.log  
 ```
+
+## Parallel Processing
+If you want to process multiple videos in parallel, configure `conf/config_parallel.yaml`, `conf/execution/parallel.yaml`, `conf/pipeline/parallel.yaml`, and `conf/io_info/parallel.yaml`, then run the following:
+```bash
+python run_job_hydra_parallel.py
+```
+<img src="figs/parallel_processing.png" alt="parallel_processing" style="display:block; margin-bottom:30px;" />
 
 # Details
 ## Head Detection (P2PNet)
@@ -65,8 +79,7 @@ P2PNet was proposed in the paper:
 [Rethinking Counting and Localization in Crowds: A Purely Point-Based Framework (ICCV 2021)](https://openaccess.thecvf.com/content/ICCV2021/html/Song_Rethinking_Counting_and_Localization_in_Crowds_A_Purely_Point-Based_Framework_ICCV_2021_paper.html)
 by Qingyu Song *et al.*
 ```
-cd p2pnet
-bash scripts/run_inference.sh <OUT_DIR> <WEIGHT_PATH> <IMG_DIR>
+bash scripts/p2pnet/run_fullsize_inference_ddp.sh <WEIGHT_PATH> <IMG_DIR> <DET_OUT_DIR> <DET_DATA_DIR> <LOG_LEVEL>
 ```
 
 ## Head Tracking (ByteTrack)
@@ -74,17 +87,19 @@ ByteTrack was proposed in the paper:
 [ByteTrack: Multi-Object Tracking by Associating Every Detection Box (ECCV 2022)](https://arxiv.org/abs/2110.06864)
 by Zhang *et al.*
 ```
-bash bytetrack/scripts/run_byte_track.sh <PLACE>
+bash scripts/bytetrack/run_byte_track.sh <DET_DATA_DIR> <TRACK_DIR>
 ```
 
 ## Risk Estimation (Crowd Risk Score)
 We proposed a quantitative metric for evaluating crowd-related risks.
+[Quantifying Risk in Pedestrian Crowds Using Divergence Estimated from Flows of Head-Tracking Data (BMVC 2025)]()
+by Haruto Nakayama *et al.*
 
 <img src="figs/method_flow.png" alt="Process for computing Crowd Risk Score (CRS)" />
 
 
 ```bash
-bash crs/scripts/run_main.sh
+bash scripts/crowd_risk_score/run_crs.sh <TRACK_DIR> <OUT_DIR> <BEV_FILE> <MAP_SIZE_FILE>
 ```
 
 ## Finetuning P2PNet
