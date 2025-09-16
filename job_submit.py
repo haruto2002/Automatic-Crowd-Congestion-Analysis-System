@@ -129,9 +129,38 @@ def write_cmd_for_local():
             f.write(command_track_vis)
 
 
+def write_cmd_for_local_parallel():
+    save_cmd_dir = "local_cmd_script/parallel_samples"
+    os.makedirs(save_cmd_dir, exist_ok=True)
+    local_save_dir = "/Users/haruto/Desktop/video_setting/parallel_samples_results"
+    dir_list = sorted(
+        glob.glob("outputs/parallel_moji_2024_03_04/2024_moji/03/*")
+    ) + sorted(glob.glob("outputs/parallel_moji_2024_03_04/2024_moji/04/*"))
+    for dir in dir_list:
+        dir_name = (
+            dir.split("/")[-3] + "_" + dir.split("/")[-2] + "_" + os.path.basename(dir)
+        )
+        det_vis_path = f"{dir}/detection_vis_30"
+        track_vis_path = f"{dir}/track_vis_5"
+        absolute_det_vis_path = os.path.abspath(det_vis_path)
+        absolute_track_vis_path = os.path.abspath(track_vis_path)
+        cmd_mkldir = f"mkdir -p {local_save_dir}/{dir_name}/"
+        command_det_vis = (
+            f"scp -r abci:{absolute_det_vis_path} {local_save_dir}/{dir_name}/"
+        )
+        command_track_vis = (
+            f"scp -r abci:{absolute_track_vis_path} {local_save_dir}/{dir_name}/"
+        )
+        with open(f"{save_cmd_dir}/{dir_name}.sh", "w") as f:
+            f.write("#!/bin/bash\n")
+            f.write(cmd_mkldir + "\n")
+            f.write(command_det_vis + "\n")
+            f.write(command_track_vis)
+
+
 if __name__ == "__main__":
-    main()
+    # main()
     # main_custom()
     # check_completed()
     # main_fail()
-    # write_cmd_for_local()
+    write_cmd_for_local_parallel()

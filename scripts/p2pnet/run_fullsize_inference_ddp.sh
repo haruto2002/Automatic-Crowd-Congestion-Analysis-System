@@ -9,7 +9,8 @@ WEIGHT_PATH=$1
 IMG_DIR=$2
 OUT_DIR=$3
 FULL_DET_DIR=$4
-LOG_LEVEL=$5
+NODE_TYPE=$5
+LOG_LEVEL=$6
 
 python p2pnet/run_fullsize_inference_ddp.py p2p \
     out_dir=$OUT_DIR \
@@ -20,4 +21,5 @@ python p2pnet/run_fullsize_inference_ddp.py p2p \
     default.num_workers=2 \
     img_dir=$IMG_DIR \
     full_det_dir=$FULL_DET_DIR \
+    node_type=$NODE_TYPE \
     log_level=$LOG_LEVEL

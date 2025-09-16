@@ -5,9 +5,9 @@ import argparse
 import logging
 import json
 from datetime import datetime
+from multiprocessing import Pool
+from tqdm import tqdm
 
-# Log configuration
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -78,7 +78,8 @@ def get_video_creation_time(path2video):
 
 def get_frame(path2video, save_dir):
     logger.info(f"Extracting frames from video file {path2video}...")
-    command = f"ffmpeg -i {path2video} -vcodec png {save_dir}/%04d.png"
+    command = f"ffmpeg -i {path2video} -q:v 1 {save_dir}/%04d.jpg"
+    # command = f"ffmpeg -i {path2video} -vcodec png {save_dir}/%04d.png"
     logger.debug(f"Executing command: {command}")
 
     try:
@@ -95,32 +96,30 @@ def get_frame(path2video, save_dir):
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--path2video", type=str, default="demo.mov")
-    parser.add_argument("--save_dir", type=str, default="demo/img")
+    parser.add_argument(
+        "--io_info_file",
+        type=str,
+        default="parallel_hydra/parallel_time_test/2025-09-16_12-44-12/IO_info/IO_info.json",
+    )
+    parser.add_argument("--img_dir_name", type=str, default="debug_img")
+    parser.add_argument(
+        "--node_type", type=str, default="rt_HC", choices=["rt_HF", "rt_HG", "rt_HC"]
+    )
     parser.add_argument(
         "--log_level",
         type=str,
         default="INFO",
         choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-        help="Set log level",
     )
     return parser.parse_args()
 
 
-def main():
-    args = get_args()
+def run_parallel(pool_list):
+    path2video, save_dir = pool_list
+    run_single(path2video, save_dir)
 
-    # Set log level
-    log_level = getattr(logging, args.log_level.upper())
-    logging.getLogger().setLevel(log_level)
 
-    path2video = args.path2video
-    save_dir = args.save_dir
-
-    logger.info("=== Frame extraction process started ===")
-    logger.info(f"Video file: {path2video}")
-    logger.info(f"Save directory: {save_dir}")
-
+def run_single(path2video, save_dir):
     # Check input file existence
     if not os.path.exists(path2video):
         raise FileNotFoundError(path2video)
@@ -130,16 +129,13 @@ def main():
     start = time.time()
 
     # Get recording time
-    # creation_time = get_video_creation_time(path2video)
-    # if creation_time:
-    #     logger.info(f"Video recording time: {creation_time}")
-
-    #     # Save recording time to file
-    #     time_info_path = os.path.join(save_dir, "video_creation_time.txt")
-    #     with open(time_info_path, "w") as f:
-    #         f.write(f"Recording time: {creation_time}\n")
-    # else:
-    #     logger.warning("Failed to get recording time")
+    creation_time = get_video_creation_time(path2video)
+    if creation_time:
+        time_info_path = os.path.join(save_dir, "video_creation_time.txt")
+        with open(time_info_path, "w") as f:
+            f.write(f"Recording time: {creation_time}\n")
+    else:
+        logger.warning("Failed to get recording time")
 
     # Execute frame extraction
     get_frame(path2video, save_dir)
@@ -151,6 +147,31 @@ def main():
     with open(time_log_path, "w") as f:
         text = f"get frame:{processing_time}\n"
         f.write(text)
+
+
+def main():
+    args = get_args()
+
+    # Set log level
+    log_level = getattr(logging, args.log_level.upper())
+    logging.getLogger().setLevel(log_level)
+
+    io_info_dict = json.load(open(args.io_info_file, "r"))
+
+    pool_list = []
+    for path2video, save_dir in io_info_dict.items():
+        img_save_dir = os.path.join(save_dir, args.img_dir_name)
+        pool_list.append((path2video, img_save_dir))
+
+    if args.node_type == "rt_HF":
+        pool_size = 192 // 2
+    elif args.node_type == "rt_HG":
+        pool_size = 16 // 2
+    elif args.node_type == "rt_HC":
+        pool_size = 32 // 2
+
+    with Pool(pool_size) as p:
+        list(tqdm(p.imap_unordered(run_parallel, pool_list), total=len(pool_list)))
 
 
 if __name__ == "__main__":

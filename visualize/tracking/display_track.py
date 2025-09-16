@@ -33,12 +33,18 @@ def display_tracking_result(track, img, save_path, color_list):
     return img_copy
 
 
-def create_mov(img_list, save_path, fps, disable_tqdm=False):
+def create_mov(img_list, save_path, fps, disable_tqdm=False, tqdm_pos=0):
     img = img_list[0]
     h, w, c = img.shape
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
     out = cv2.VideoWriter(save_path, fourcc, fps, (w, h))
-    for img in tqdm(img_list, desc="Creating Movie", leave=False, disable=disable_tqdm):
+    for img in tqdm(
+        img_list,
+        desc="Creating Movie",
+        leave=False,
+        disable=disable_tqdm,
+        position=tqdm_pos,
+    ):
         out.write(img)
     out.release()
 
@@ -69,7 +75,7 @@ def get_all_track(track_dir, img_dir, start_frame, end_frame, crop_area=None):
         all_track += list(track)
     all_track = np.array(all_track)
 
-    path2img = sorted(glob.glob(f"{img_dir}/*.png"))[end_frame - 1]
+    path2img = sorted(glob.glob(f"{img_dir}/*.jpg"))[end_frame - 1]
     img = cv2.imread(path2img)
 
     if crop_area is not None:
@@ -97,7 +103,9 @@ def main(
     start_frame=None,
     end_frame=None,
     crop_area=None,
+    node_type=None,
     disable_tqdm=False,
+    tqdm_pos=0,
 ):
     frame_save_dir = f"{save_base_dir}/frames"
     os.makedirs(frame_save_dir, exist_ok=True)
@@ -107,7 +115,14 @@ def main(
         end_frame = len(glob.glob(f"{track_dir}/*.txt"))
     np.random.seed(seed=32)
     color_list = [tuple(np.random.randint(0, 256, 3).tolist()) for _ in range(10000)]
-    pool_size = int(os.cpu_count())
+    if node_type == "rt_HF":
+        pool_size = 192
+    elif node_type == "rt_HG":
+        pool_size = 16
+    elif node_type == "rt_HC":
+        pool_size = 32
+    else:
+        pool_size = int(os.cpu_count())
 
     display_inputs = []
     set_data_inputs = []
@@ -119,7 +134,7 @@ def main(
             s = 1
         else:
             s = e - vis_track_length
-        save_path = f"{frame_save_dir}/{e:04d}.png"
+        save_path = f"{frame_save_dir}/{e:04d}.jpg"
         save_path_list.append(save_path)
         set_data_inputs.append(
             (track_dir, img_dir, s, e, crop_area, save_path, color_list, order)
@@ -132,6 +147,7 @@ def main(
                 total=len(set_data_inputs),
                 desc="Setting Data",
                 leave=False,
+                position=tqdm_pos,
                 disable=disable_tqdm,
             )
         )
@@ -143,6 +159,7 @@ def main(
                 total=len(display_inputs),
                 desc="Displaying Frames",
                 leave=False,
+                position=tqdm_pos,
                 disable=disable_tqdm,
             )
         )
@@ -150,7 +167,7 @@ def main(
     img_list = [img for img, order in sorted(tracking_vis, key=lambda x: x[-1])]
     movie_save_path = f"{save_base_dir}/{start_frame}_{end_frame}.mp4"
     fps = 30 / freq
-    create_mov(img_list, movie_save_path, fps, disable_tqdm)
+    create_mov(img_list, movie_save_path, fps, disable_tqdm, tqdm_pos)
 
 
 def run_main():
@@ -171,13 +188,21 @@ def run_main():
         default=None,
         help="crop area as four integers: x1 y1 x2 y2",
     )
+    parser.add_argument("--node_type", type=str, default=None)
     parser.add_argument("--log_level", type=str, default="INFO")
+    parser.add_argument("--multi_video_mode", type=bool, default=False)
     args = parser.parse_args()
 
+    node_type = args.node_type
     log_level = args.log_level
     logger = logging.getLogger(__name__)
     logger.setLevel(getattr(logging, log_level.upper()))
     disable_tqdm = logger.level >= logging.ERROR
+
+    if args.multi_video_mode:
+        tqdm_pos = 1
+    else:
+        tqdm_pos = 0
 
     main(
         args.track_dir,
@@ -188,7 +213,9 @@ def run_main():
         start_frame=args.start_frame,
         end_frame=args.end_frame,
         crop_area=args.crop_area,
+        node_type=node_type,
         disable_tqdm=disable_tqdm,
+        tqdm_pos=tqdm_pos,
     )
 
 

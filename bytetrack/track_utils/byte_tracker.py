@@ -193,9 +193,9 @@ class BYTETracker(object):
         self.max_time_lost = self.buffer_size
         self.kalman_filter = KalmanFilter()
         self.match_thresh = args.match_thresh
-        self.point_matching = True  # ポイントベースのマッチングを使用
+        self.point_matching = True  # Use point-based matching
 
-        # 距離計算メトリック（'maha'または'euclidean'）
+        # Distance calculation metric ('maha' or 'euclidean')
         self.distance_metric = args.distance_metric
 
     def update(self, output_results, img_info, img_size):
@@ -267,7 +267,7 @@ class BYTETracker(object):
         # Predict the current location with KF
         STrack.multi_predict(strack_pool)
 
-        # 距離ベースのマッチングを使用
+        # Use distance-based matching
         if self.point_matching:
             # Use selected distance metric of Kalman filter
             dists = maha_distance(
@@ -312,7 +312,7 @@ class BYTETracker(object):
         ]
 
         if self.point_matching:
-            # 距離ベースのマッチングを使用
+            # Use distance-based matching
             dists = maha_distance(
                 r_tracked_stracks,
                 detections_second,
@@ -320,7 +320,7 @@ class BYTETracker(object):
                 metric=self.distance_metric,
             )
         else:
-            # 従来のIoU距離を使用
+            # Use traditional IoU distance
             dists = iou_distance(r_tracked_stracks, detections_second)
 
         matches, u_track, u_detection_second = linear_assignment(
@@ -346,7 +346,7 @@ class BYTETracker(object):
         detections = [detections[i] for i in u_detection]
 
         if self.point_matching:
-            # 距離ベースのマッチングを使用（未確認トラックには常にユークリッド距離を使用）
+            # Use distance-based matching (always use Euclidean distance for unconfirmed tracks)
             dists = maha_distance(
                 unconfirmed,
                 detections,
@@ -354,7 +354,7 @@ class BYTETracker(object):
                 metric=self.distance_metric,
             )
         else:
-            # 従来のIoU距離を使用
+            # Use traditional IoU distance
             dists = iou_distance(unconfirmed, detections)
 
         if not self.args.mot20:
@@ -432,10 +432,8 @@ def sub_stracks(tlista, tlistb):
 
 
 def remove_duplicate_stracks(stracksa, stracksb):
-    # 距離ベースのマッチングを使用
     pdist = euclidean_distance(stracksa, stracksb)
 
-    # しきい値10.0以下の距離を重複として扱う
     pairs = np.where(pdist < 10.0)
     dupa, dupb = list(), list()
     for p, q in zip(*pairs):

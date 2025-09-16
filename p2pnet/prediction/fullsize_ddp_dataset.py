@@ -21,7 +21,7 @@ class FullSizeDataset(Dataset):
         self.img_dir = img_dir
 
         # 画像パスのリストを取得
-        self.path2img_list = sorted(glob.glob(os.path.join(img_dir, "*.png")))
+        self.path2img_list = sorted(glob.glob(os.path.join(img_dir, "*.jpg")))
         if len(self.path2img_list) == 0:
             raise FileNotFoundError(img_dir)
 

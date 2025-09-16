@@ -7,9 +7,9 @@ debug*
 *.mp4
 *.MOV
 __pycache__/
+.mypy_cache
 
-output_pre
-outputs
+output*
 samples
 
 run_pipeline_demo.sh
@@ -23,3 +23,7 @@ false_list.txt
 memo.txt
 local_cmd_script
 points.png
+run_pipeline_pre.sh
+
+parallel_samples
+parallel_hydra

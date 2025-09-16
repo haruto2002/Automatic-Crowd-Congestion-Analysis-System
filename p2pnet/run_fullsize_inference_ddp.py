@@ -1,6 +1,7 @@
 import time
 import numpy as np
 import os
+import glob
 from tqdm import tqdm
 import torch
 import torch.distributed as dist
@@ -172,6 +173,10 @@ def run():
     start_time = time.time()
 
     cfg = setup_config()
+
+    assert (
+        len(sorted(glob.glob(os.path.join(cfg.img_dir, "*.jpg")))) != 0
+    ), "No jpg images found (img_dir: {cfg.img_dir})"
 
     logger = logging.getLogger()
     logger.setLevel(getattr(logging, cfg.log_level.upper() or "INFO"))

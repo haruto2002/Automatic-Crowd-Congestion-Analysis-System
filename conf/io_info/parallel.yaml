@@ -1,0 +1,4 @@
+setting_execution_file: "preprocess/set_parallel_inputs.py"
+setting_execution_args: 
+  PARENT_DIR: ${result_save_dir}
+  SAVE_DIR: ${settings.IO_info_dir}

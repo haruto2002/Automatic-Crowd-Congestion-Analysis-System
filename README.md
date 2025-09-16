@@ -66,6 +66,13 @@ SAVE_DIR/
 └── run_job_hydra.log  
 ```
 
+## Parallel Processing
+If you want to process multiple videos in parallel, configure `conf/config_parallel.yaml`, `conf/execution/parallel.yaml`, `conf/pipeline/parallel.yaml`, and `conf/io_info/parallel.yaml`, then run the following:
+```bash
+python run_job_hydra_parallel.py
+```
+<img src="figs/parallel_processing.png" alt="parallel_processing" style="display:block; margin-bottom:30px;" />
+
 # Details
 ## Head Detection (P2PNet)
 P2PNet was proposed in the paper:
