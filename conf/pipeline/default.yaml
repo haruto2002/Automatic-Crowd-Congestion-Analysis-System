@@ -3,6 +3,7 @@ get_frame:
   inputs:
     - video_path
     - img_dir
+    - img_extension
 detection: 
   script: "scripts/p2pnet/run_fullsize_inference_ddp.sh"
   inputs:
@@ -23,23 +24,25 @@ risk_analysis:
     - bev_file
     - size_file
 detection_visualization: 
-    script: "scripts/vis/plot_detection.sh"
+    script: "scripts/vis/detection/plot_detection.sh"
     inputs:
       - img_dir
       - detection_data_dir
       - detection_vis_dir
       - detection_vis_freq
+      - multi_video_mode
 tracking_visualization: 
-    script: "scripts/vis/display_track.sh"
+    script: "scripts/vis/tracking/display_track.sh"
     inputs:
       - track_dir
       - img_dir
       - track_vis_dir
       - track_vis_freq
+      - multi_video_mode
       # - track_vis_start_frame
       # - track_vis_end_frame
 risk_analysis_visualization: 
-    script: "scripts/vis/plot_risk_analysis.sh"
+    script: "scripts/vis/crowd_risk/plot_risk_analysis.sh"
     inputs:
       - track_dir
       - img_dir

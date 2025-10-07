@@ -3,6 +3,7 @@ get_frame:
   inputs:
     - IO_info_file
     - img_sub_dir
+    - img_extension
 
 detection: 
   script: "scripts/p2pnet/run_fullsize_inference_ddp_multi_video.sh"

@@ -13,10 +13,9 @@ TRACK_DIR=$1
 IMG_DIR=$2
 VIS_DIR=$3
 FREQ=$4
-NODE_TYPE=$5
-LOG_LEVEL=$6
-MULTI_VIDEO_MODE=$7
-
+MULTI_VIDEO_MODE=$5
+NODE_TYPE=$6
+LOG_LEVEL=$7
 python visualize/tracking/display_track.py \
         --track_dir ${TRACK_DIR} \
         --img_dir ${IMG_DIR} \

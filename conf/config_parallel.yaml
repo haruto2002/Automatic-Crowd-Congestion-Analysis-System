@@ -1,4 +1,4 @@
-experiment_name: "parallel_time_test"
+experiment_name: "umbrella"
 result_save_dir: "outputs/${experiment_name}/results"
 job_id: null
 hydra:
@@ -14,12 +14,14 @@ defaults:
 settings:
   #====入力設定====
   IO_info_dir: "${hydra:run.dir}/IO_info"
-  detection_weight_path: "cutout.pth"
+  detection_weight_path: "SHTechB+2023+2024.pth"
+  # detection_weight_path: "cutout.pth"
   #====可視化設定====
   detection_vis_freq: 30
   track_vis_freq: 5
   #====出力設定====
   img_sub_dir: "img"
+  img_extension: "jpg"
   detection_output_sub_dir: "detection"
   detection_data_sub_dir: "detection/frame_detection"
   track_sub_dir: "track"

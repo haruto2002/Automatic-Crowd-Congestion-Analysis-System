@@ -76,9 +76,14 @@ def get_video_creation_time(path2video):
         return None
 
 
-def get_frame(path2video, save_dir):
+def get_frame(path2video, save_dir, img_extension):
     logger.info(f"Extracting frames from video file {path2video}...")
-    command = f"ffmpeg -i {path2video} -q:v 1 {save_dir}/%04d.jpg"
+    if img_extension == "png":
+        command = f"ffmpeg -i {path2video} -vcodec png {save_dir}/%04d.png"
+    elif img_extension == "jpg":
+        command = f"ffmpeg -i {path2video} -q:v 1 {save_dir}/%04d.jpg"
+    else:
+        raise ValueError(f"Invalid image extension: {img_extension}")
     # command = f"ffmpeg -i {path2video} -vcodec png {save_dir}/%04d.png"
     logger.debug(f"Executing command: {command}")
 
@@ -103,6 +108,9 @@ def get_args():
     )
     parser.add_argument("--img_dir_name", type=str, default="debug_img")
     parser.add_argument(
+        "--img_extension", type=str, default="png", choices=["png", "jpg"]
+    )
+    parser.add_argument(
         "--node_type", type=str, default="rt_HC", choices=["rt_HF", "rt_HG", "rt_HC"]
     )
     parser.add_argument(
@@ -115,11 +123,11 @@ def get_args():
 
 
 def run_parallel(pool_list):
-    path2video, save_dir = pool_list
-    run_single(path2video, save_dir)
+    path2video, save_dir, img_extension = pool_list
+    run_single(path2video, save_dir, img_extension)
 
 
-def run_single(path2video, save_dir):
+def run_single(path2video, save_dir, img_extension):
     # Check input file existence
     if not os.path.exists(path2video):
         raise FileNotFoundError(path2video)
@@ -138,7 +146,7 @@ def run_single(path2video, save_dir):
         logger.warning("Failed to get recording time")
 
     # Execute frame extraction
-    get_frame(path2video, save_dir)
+    get_frame(path2video, save_dir, img_extension)
     frame_end = time.time()
     processing_time = frame_end - start
 
@@ -161,7 +169,7 @@ def main():
     pool_list = []
     for path2video, save_dir in io_info_dict.items():
         img_save_dir = os.path.join(save_dir, args.img_dir_name)
-        pool_list.append((path2video, img_save_dir))
+        pool_list.append((path2video, img_save_dir, args.img_extension))
 
     if args.node_type == "rt_HF":
         pool_size = 192 // 2

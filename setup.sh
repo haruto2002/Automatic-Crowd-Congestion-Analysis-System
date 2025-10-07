@@ -28,3 +28,5 @@ conda install conda-forge::pytorch-model-summary
 conda install conda-forge::lap
 pip install cython-bbox
 pip install hydra-core
+
+pip install --extra-index-url https://pypi.nvidia.com --upgrade nvidia-dali-cuda120

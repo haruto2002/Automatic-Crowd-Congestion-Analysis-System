@@ -2,7 +2,7 @@ experiment_name: "demo_hydra"
 job_id: null
 hydra:
   run:
-    dir: ./outputs/${experiment_name}/${now:%Y-%m-%d_%H-%M-%S}
+    dir: ./outputs/${experiment_name}
 
 
 defaults:
@@ -20,10 +20,12 @@ settings:
   #====可視化設定====
   detection_vis_freq: 30
   track_vis_freq: 5
+  multi_video_mode: False
   # track_vis_start_frame: 1
   # track_vis_end_frame: 200
   #====出力設定====
   img_dir: "${settings.save_dir}/img"
+  img_extension: "png"
   detection_output_dir: "${settings.save_dir}/detection"
   detection_data_dir: "${settings.save_dir}/detection/frame_detection"
   track_dir: "${settings.save_dir}/track"

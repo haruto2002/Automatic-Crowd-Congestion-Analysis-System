@@ -13,7 +13,7 @@ job2:
   parallel: false
   log_level: "INFO"
   walltime: "6:00:00"
-  num_use_node: 5
+  num_use_node: 1
 
 job3:
   steps:

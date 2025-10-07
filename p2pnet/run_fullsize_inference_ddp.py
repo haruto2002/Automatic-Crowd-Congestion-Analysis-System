@@ -174,9 +174,9 @@ def run():
 
     cfg = setup_config()
 
-    assert (
-        len(sorted(glob.glob(os.path.join(cfg.img_dir, "*.jpg")))) != 0
-    ), "No jpg images found (img_dir: {cfg.img_dir})"
+    assert (len(sorted(glob.glob(os.path.join(cfg.img_dir, "*.jpg")))) != 0) or len(
+        sorted(glob.glob(os.path.join(cfg.img_dir, "*.png")))
+    ) != 0, "No jpg images found (img_dir: {cfg.img_dir})"
 
     logger = logging.getLogger()
     logger.setLevel(getattr(logging, cfg.log_level.upper() or "INFO"))

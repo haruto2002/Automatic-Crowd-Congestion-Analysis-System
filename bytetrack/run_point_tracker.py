@@ -32,6 +32,7 @@ def make_parser():
         choices=["maha", "euclidean"],
     )
     parser.add_argument("--mot20", dest="mot20", default=False, action="store_true")
+    parser.add_argument("--node_type", type=str, default="rt_HG")
     parser.add_argument(
         "--log_level",
         type=str,

@@ -56,12 +56,16 @@ def parallel_display(inputs):
 
 
 def parallel_set_data(inputs):
-    track_dir, img_dir, s, e, crop_area, save_path, color_list, order = inputs
-    track, img = get_all_track(track_dir, img_dir, s, e, crop_area)
+    track_dir, img_dir, s, e, img_extension, crop_area, save_path, color_list, order = (
+        inputs
+    )
+    track, img = get_all_track(track_dir, img_dir, s, e, img_extension, crop_area)
     return track, img, save_path, color_list, order
 
 
-def get_all_track(track_dir, img_dir, start_frame, end_frame, crop_area=None):
+def get_all_track(
+    track_dir, img_dir, start_frame, end_frame, img_extension, crop_area=None
+):
     # crop_area >> [xmin,ymin,xmax,ymax]
     txt_files = sorted(glob.glob(f"{track_dir}/*.txt"))
     track_list = [
@@ -75,7 +79,7 @@ def get_all_track(track_dir, img_dir, start_frame, end_frame, crop_area=None):
         all_track += list(track)
     all_track = np.array(all_track)
 
-    path2img = sorted(glob.glob(f"{img_dir}/*.jpg"))[end_frame - 1]
+    path2img = sorted(glob.glob(f"{img_dir}/*.{img_extension}"))[end_frame - 1]
     img = cv2.imread(path2img)
 
     if crop_area is not None:
@@ -124,6 +128,8 @@ def main(
     else:
         pool_size = int(os.cpu_count())
 
+    img_extension = glob.glob(f"{img_dir}/*")[0].split(".")[-1]
+
     display_inputs = []
     set_data_inputs = []
     save_path_list = []
@@ -134,10 +140,20 @@ def main(
             s = 1
         else:
             s = e - vis_track_length
-        save_path = f"{frame_save_dir}/{e:04d}.jpg"
+        save_path = f"{frame_save_dir}/{e:04d}.{img_extension}"
         save_path_list.append(save_path)
         set_data_inputs.append(
-            (track_dir, img_dir, s, e, crop_area, save_path, color_list, order)
+            (
+                track_dir,
+                img_dir,
+                s,
+                e,
+                img_extension,
+                crop_area,
+                save_path,
+                color_list,
+                order,
+            )
         )
 
     with Pool(pool_size) as p:
