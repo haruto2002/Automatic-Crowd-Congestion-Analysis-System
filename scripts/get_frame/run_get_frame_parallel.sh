@@ -13,11 +13,13 @@ cd $WORKDIR
 
 IO_INFO_FILE=${IO_INFO_FILE:-$1}
 IMG_DIR_NAME=${IMG_DIR_NAME:-$2}
-NODE_TYPE=${NODE_TYPE:-$3}
-LOG_LEVEL=${LOG_LEVEL:-$4}
+IMG_EXTENSION=${IMG_EXTENSION:-$3}
+NODE_TYPE=${NODE_TYPE:-$4}
+LOG_LEVEL=${LOG_LEVEL:-$5}
 
 python preprocess/get_all_frame_parallel.py \
         --io_info_file $IO_INFO_FILE \
         --img_dir_name $IMG_DIR_NAME \
+        --img_extension $IMG_EXTENSION \
         --node_type $NODE_TYPE \
         --log_level $LOG_LEVEL

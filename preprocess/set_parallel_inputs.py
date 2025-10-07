@@ -19,12 +19,7 @@ def get_args():
 def create_IO_info_file(parent_dir, save_dir):
     IO_setting_info = {}
     # dir_list = sorted(glob.glob("samples/*/*"))
-    dir_parent_list = [
-        "samples/2023_07_31_smart_festival",
-        "samples/2024_0602_Yokohama_Kaikosai",
-        "samples/2024_0805_Yokohama",
-        "samples/2025_0602_Yokohama_Kaikosai",
-    ]
+    dir_parent_list = ["samples/2024_0602_Yokohama_Kaikosai"]
     dir_list = []
     for dir in dir_parent_list:
         dir_list.extend(glob.glob(f"{dir}/*"))

@@ -7,7 +7,8 @@ cd $WORKDIR
 
 DETECTION_DIR=$1
 TRACK_SAVE_DIR=$2
-LOG_LEVEL=$3
+NODE_TYPE=$3
+LOG_LEVEL=$4
 
 python bytetrack/run_point_tracker.py \
         --save_dir ${TRACK_SAVE_DIR} \
@@ -18,4 +19,5 @@ python bytetrack/run_point_tracker.py \
         --track_buffer 30 \
         --match_thresh 10.0 \
         --distance_metric euclidean \
+        --node_type ${NODE_TYPE} \
         --log_level ${LOG_LEVEL}

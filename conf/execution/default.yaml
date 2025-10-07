@@ -8,3 +8,4 @@ pipeline:
   # - risk_analysis_visualization
 log_level: "INFO"
 step_log_level: "ERROR"
+node_type: "rt_HG"

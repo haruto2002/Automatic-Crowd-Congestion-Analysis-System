@@ -33,9 +33,9 @@ def plot_detection_multi(
                 detection_dir,
                 save_dir,
                 str(freq),
+                "True",
                 node_type,
                 log_level,
-                "True",
             ]
         )
 

@@ -30,9 +30,9 @@ def display_track_multi(
                 img_dir,
                 save_dir,
                 str(freq),
+                "True",
                 node_type,
                 log_level,
-                "True",
             ]
         )
 

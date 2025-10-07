@@ -33,6 +33,8 @@ def run_pipeline_with_config(cfg: DictConfig) -> None:
 
     os.makedirs(settings.save_dir, exist_ok=True)
 
+    logger.info(f"Output dir: {settings.save_dir}")
+
     logger.info(f"Pipeline: {execution.pipeline}\n")
 
     # Initialize time log
@@ -56,6 +58,7 @@ def run_pipeline_with_config(cfg: DictConfig) -> None:
         cmd = (
             ["bash", script]
             + [str(settings[p]) for p in step_inputs]
+            + [str(execution.node_type)]
             + [str(execution.step_log_level)]
         )
 

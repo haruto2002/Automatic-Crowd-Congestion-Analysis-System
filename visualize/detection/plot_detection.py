@@ -49,14 +49,15 @@ def plot_det_parallel(
 
 def plot_det(pool_list):
     path2detection, img_dir, save_dir, frame_name, threshold = pool_list
-    img_path = f"{img_dir}/{frame_name}.jpg"
+    img_extension = glob.glob(f"{img_dir}/*")[0].split(".")[-1]
+    img_path = f"{img_dir}/{frame_name}.{img_extension}"
     img = cv2.imread(img_path)
     det = np.loadtxt(path2detection)
     det = det[det[:, 2] > threshold]
     for d in det:
         x, y, _ = d
         cv2.circle(img, (int(x), int(y)), 5, (0, 0, 255), -1)
-    cv2.imwrite(f"{save_dir}/{frame_name}.jpg", img)
+    cv2.imwrite(f"{save_dir}/{frame_name}.{img_extension}", img)
 
 
 def get_args():
